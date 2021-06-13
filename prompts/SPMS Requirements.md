@@ -47,16 +47,16 @@
         - This editor also has the ability to change the tentative title, tag line, or completion date.
             - If any of this information is changed, the author should be notified, and should have an opportunity to approve the changes or cancel the request.
         - If the editor takes too much time, the request should be marked as **high priority** and should be shown at the top of the list of pending requests, but this should not prevent other requests from being processed.
-    - ## Completed Story Upload
-        - Once the author's request has been approved, a completed draft of the story must be submitted for proofreading.
-            - Depending on story type (length), the draft must be proofread and approved by a variable number of individuals.
-            - Proofreaders can request that changes be made to the draft.
-            - If changes are requested, the author should be notified, and the pitch will remain pending until an updated draft is submitted.
-        - ## Proofreaders Based on Story Type (length)
-            - **Articles:** Draft only needs approval from the Senior Editor
-            - **Short Stories:** Draft must be approved by the Senior Editor, as well as one other editor from the relative genre committee.
-            - **Novellas and Novels:** Draft must be approved by a majority of editors in the genre committee.
-        - Drafts should only be viewable by the author and editors within the relevant genre committee, as well as the editor that is not in the committee that approved the pitch.
-    - ## Miscellaneous
-        - Editors can be in multiple genre committees.
-        - A genre committee should have at least 3 editors and at least 1 senior editor, with a maximum of 2 senior editors per committee.
+- # Completed Story Upload
+    - Once the author's request has been approved, a completed draft of the story must be submitted for proofreading.
+        - Depending on story type (length), the draft must be proofread and approved by a variable number of individuals.
+        - Proofreaders can request that changes be made to the draft.
+        - If changes are requested, the author should be notified, and the pitch will remain pending until an updated draft is submitted.
+    - ## Proofreaders Based on Story Type (length)
+        - **Articles:** Draft only needs approval from the Senior Editor
+        - **Short Stories:** Draft must be approved by the Senior Editor, as well as one other editor from the relative genre committee.
+        - **Novellas and Novels:** Draft must be approved by a majority of editors in the genre committee.
+    - Drafts should only be viewable by the author and editors within the relevant genre committee, as well as the editor that is not in the committee that approved the pitch.
+- # Miscellaneous
+    - Editors can be in multiple genre committees.
+    - A genre committee should have at least 3 editors and at least 1 senior editor, with a maximum of 2 senior editors per committee.
