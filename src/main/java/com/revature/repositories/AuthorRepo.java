@@ -15,12 +15,13 @@ public class AuthorRepo implements GenericRepo<Author> {
 	
 	@Override
 	public Author add(Author a) {
-		String sql = "insert into authors values (default, ?, ?, ?) returning *;";
+		String sql = "insert into authors values (default, ?, ?, ?, ?) returning *;";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, a.getFirstName());
 			ps.setString(2, a.getLastName());
 			ps.setString(3, a.getBio());
+			ps.setInt(4, a.getPoints());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				a.setId(rs.getInt("id"));
@@ -70,11 +71,12 @@ public class AuthorRepo implements GenericRepo<Author> {
 
 	@Override
 	public boolean update(Author a) {
-		String sql = "update authors set bio = ? where id = ? returning *;";
+		String sql = "update authors set bio = ?, points = ? where id = ? returning *;";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, a.getBio());
-			ps.setInt(2, a.getId());
+			ps.setInt(2, a.getPoints());
+			ps.setInt(3, a.getId());
 			return ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -104,6 +106,7 @@ public class AuthorRepo implements GenericRepo<Author> {
 		a.setFirstName(rs.getString("first_name"));
 		a.setLastName(rs.getString("last_name"));
 		a.setBio(rs.getString("bio"));
+		a.setPoints(rs.getInt("points"));
 		return a;
 	}
 }

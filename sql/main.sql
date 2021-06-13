@@ -5,6 +5,13 @@ drop table authors;
 drop table stories;
 drop table genre_editor_join;
 
+alter sequence genres_id_seq restart with 1;
+alter sequence story_types_id_seq restart with 1;
+alter sequence editors_id_seq restart with 1;
+alter sequence authors_id_seq restart with 1;
+alter sequence stories_id_seq restart with 1;
+alter sequence genre_editor_join_id_seq restart with 1;
+
 create table genres (
 	id serial primary key,
 	name varchar(20),
@@ -13,7 +20,7 @@ create table genres (
 
 create table story_types (
 	id serial primary key,
-	name varchar(10),
+	name varchar(15),
 	points int
 );
 
@@ -28,7 +35,8 @@ create table authors (
 	id serial primary key,
 	first_name varchar(20),
 	last_name varchar(20),
-	bio varchar
+	bio varchar,
+	points int
 );
 
 create table stories (
@@ -49,3 +57,10 @@ create table genre_editor_join (
 	genre int references genres(id),
 	editor int references editors(id)
 );
+
+insert into story_types values 
+(default, 'novel', 50),
+(default, 'novella', 25),
+(default, 'short story', 20),
+(default, 'article', 10);
+
