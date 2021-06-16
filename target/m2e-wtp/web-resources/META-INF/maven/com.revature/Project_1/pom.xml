@@ -11,7 +11,7 @@
 
   <name>Project_1 Maven Webapp</name>
   <!-- FIXME change it to the project's website -->
-  <url>http://localhost:8080</url>
+  <url>http://localhost:8080/Project_1/index.html</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

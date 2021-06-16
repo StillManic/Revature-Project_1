@@ -46,6 +46,20 @@ public class StoryTypeRepo implements GenericRepo<StoryType> {
 		
 		return null;
 	}
+	
+	public StoryType getByName(String name) {
+		String sql = "select * from story_types where name = ?;";
+		try {
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, name);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) return this.make(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 
 	@Override
 	public Map<Integer, StoryType> getAll() {

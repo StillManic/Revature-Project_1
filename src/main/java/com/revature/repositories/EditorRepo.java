@@ -15,12 +15,13 @@ public class EditorRepo implements GenericRepo<Editor> {
 	
 	@Override
 	public Editor add(Editor e) {
-		String sql = "insert into editors values(default, ?, ?, ?) returning *;";
+		String sql = "insert into editors values(default, ?, ?, ?, ?) returning *;";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, e.getFirstName());
 			ps.setString(2, e.getLastName());
-			ps.setString(3, e.getJobTitle());
+			ps.setString(3, e.getUsername());
+			ps.setString(4, e.getPassword());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				e.setId(rs.getInt("id"));
@@ -39,6 +40,21 @@ public class EditorRepo implements GenericRepo<Editor> {
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, id);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) return this.make(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public Editor getByUsernameAndPassword(String username, String password) {
+		String sql = "select * from editors where username = ? and \"password\" = ?;";
+		try {
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, username);
+			ps.setString(2, password);
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) return this.make(rs);
 		} catch (SQLException e) {
@@ -99,8 +115,9 @@ public class EditorRepo implements GenericRepo<Editor> {
 		Editor e = new Editor();
 		e.setId(rs.getInt("id"));
 		e.setFirstName(rs.getString("first_name"));
-		e.setLast_name(rs.getString("last_name"));
-		e.setJobTitle(rs.getString("job_title"));
+		e.setLastName(rs.getString("last_name"));
+		e.setUsername(rs.getString("username"));
+		e.setPassword(rs.getString("password"));
 		return e;
 	}
 }

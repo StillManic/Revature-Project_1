@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.revature.models.Author;
+import com.revature.models.Editor;
 import com.revature.utils.JDBCConnection;
 
 public class AuthorRepo implements GenericRepo<Author> {
@@ -40,6 +41,21 @@ public class AuthorRepo implements GenericRepo<Author> {
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, id);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) return this.make(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public Author getByUsernameAndPassword(String username, String password) {
+		String sql = "select * from authors where username = ? and \"password\" = ?;";
+		try {
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, username);
+			ps.setString(2, password);
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) return this.make(rs);
 		} catch (SQLException e) {
@@ -107,6 +123,8 @@ public class AuthorRepo implements GenericRepo<Author> {
 		a.setLastName(rs.getString("last_name"));
 		a.setBio(rs.getString("bio"));
 		a.setPoints(rs.getInt("points"));
+		a.setUsername(rs.getString("username"));
+		a.setPassword(rs.getString("password"));
 		return a;
 	}
 }

@@ -11,11 +11,11 @@ alter sequence editors_id_seq restart with 1;
 alter sequence authors_id_seq restart with 1;
 alter sequence stories_id_seq restart with 1;
 alter sequence genre_editor_join_id_seq restart with 1;
+alter sequence logins_id_seq restart with 1;
 
 create table genres (
 	id serial primary key,
-	name varchar(20),
-	senior_editor int references editors(id)
+	name varchar(20)
 );
 
 create table story_types (
@@ -28,7 +28,8 @@ create table editors (
 	id serial primary key,
 	first_name varchar(20),
 	last_name varchar(20),
-	job_title varchar(20)
+	username varchar(20),
+	password varchar(20)
 );
 
 create table authors (
@@ -36,7 +37,9 @@ create table authors (
 	first_name varchar(20),
 	last_name varchar(20),
 	bio varchar,
-	points int
+	points int,
+	username varchar(20),
+	password varchar(20)
 );
 
 create table stories (
@@ -55,12 +58,64 @@ create table stories (
 create table genre_editor_join (
 	id serial primary key,
 	genre int references genres(id),
-	editor int references editors(id)
+	editor int references editors(id),
+	senior bool,
+	assistant bool
 );
+
+alter table editors add column username varchar(20);
+alter table editors add column password varchar(20);
+alter table authors add column username varchar(20);
+alter table authors add column password varchar(20);
 
 insert into story_types values 
 (default, 'novel', 50),
 (default, 'novella', 25),
 (default, 'short story', 20),
 (default, 'article', 10);
+
+create or replace procedure "Project_1".resetTables()
+language sql
+as $$
+	delete from stories;
+	delete from authors;
+	delete from genre_editor_join;
+	delete from genres;
+	delete from editors;
+
+	alter sequence editors_id_seq restart with 1;
+	alter sequence authors_id_seq restart with 1;
+	alter sequence stories_id_seq restart with 1;
+	alter sequence genre_editor_join_id_seq restart with 1;
+	alter sequence genres_id_seq restart with 1;
+$$;
+
+call "Project_1".resetTables();
+
+
+
+select gej.id, g.id as g_id, g.name, e.id as e_id, e.first_name, e.last_name, gej.senior, gej.assistant
+from genre_editor_join gej 
+full join genres g
+on gej.genre = g.id
+full join editors e
+on gej.editor = e.id
+order by gej.senior desc, gej.assistant desc;
+
+
+
+select gej.id, g.id as g_id, g.name, e.id as e_id, e.first_name, e.last_name, gej.senior, gej.assistant
+from genre_editor_join gej 
+full join genres g
+on gej.genre = g.id
+full join editors e
+on gej.editor = e.id
+where gej.id = 5;
+
+
+
+
+
+
+
 

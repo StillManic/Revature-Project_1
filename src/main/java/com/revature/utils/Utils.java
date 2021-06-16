@@ -25,7 +25,7 @@ public class Utils {
 		return gToE.get(g);
 	}
 	
-	public static void addEntry(Genre g, Editor e) {
+	public static void addEntry(Genre g, Editor e, boolean senior, boolean assistant) {
 		Set<Genre> gSet = eToG.get(e);
 		Set<Editor> eSet = gToE.get(g);
 		
@@ -43,13 +43,12 @@ public class Utils {
 		gToE.put(g, eSet);
 		eToG.put(e, gSet);
 		
-		GEJoin j = new GEJoin(g, e);
+		GEJoin j = new GEJoin(g, e, senior, assistant);
 		gejr.add(j);
 	}
 	
 	public static void loadEntries() {
 		Map<Integer, GEJoin> map = gejr.getAll();
-		List<GEJoin> list = new ArrayList<GEJoin>(map.values());
 		
 		for (GEJoin j : map.values()) {
 			Genre g = j.getGenre();
