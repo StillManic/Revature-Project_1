@@ -12,6 +12,6 @@
   
   <servlet-mapping>
   	<servlet-name>FrontController</servlet-name>
-  	<url-pattern>/*</url-pattern>
+  	<url-pattern>/controller/*</url-pattern>
   </servlet-mapping>
 </web-app>

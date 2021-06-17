@@ -1,6 +1,15 @@
 package com.revature.models;
 
+import java.lang.reflect.Type;
 import java.sql.Date;
+
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.revature.repositories.GenreRepo;
+import com.revature.repositories.StoryTypeRepo;
 
 public class Story {
 	private Integer id;
@@ -177,5 +186,24 @@ public class Story {
 		return "Story [id=" + id + ", title=" + title + ", genre=" + genre + ", type=" + type + ", author=" + author
 				+ ", description=" + description + ", tagLine=" + tagLine + ", completionDate=" + completionDate
 				+ ", approvalStatus=" + approvalStatus + ", reason=" + reason + "]";
+	}
+	
+	public static class Deserializer implements JsonDeserializer<Story> {
+		@Override
+		public Story deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+			Story story = new Story();
+			JsonObject jo = json.getAsJsonObject();
+			story.setTitle(context.deserialize(jo.get("title"), String.class));
+			// TODO: move this to GenreServices!!!
+			GenreRepo gr = new GenreRepo();
+			story.setGenre(gr.getByName(context.deserialize(jo.get("genre"), String.class)));
+			// TODO: move this to StoryTypeServices!!!
+			StoryTypeRepo str = new StoryTypeRepo();
+			story.setType(str.getByName(context.deserialize(jo.get("type"), String.class)));
+			story.setDescription(context.deserialize(jo.get("description"), String.class));
+			story.setTagLine(context.deserialize(jo.get("tagline"), String.class));
+			story.setCompletionDate(context.deserialize(jo.get("date"), Date.class));
+			return story;
+		}
 	}
 }
