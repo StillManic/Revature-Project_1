@@ -39,7 +39,7 @@ public class GEJoinRepo implements GenericRepo<GEJoin> {
 	@Override
 	public GEJoin getById(Integer id) {
 //		String sql = "select * from genre_editor_join where id = ?;";
-		String sql = "select gej.id, g.id as g_id, g.name, e.id as e_id, e.first_name, e.last_name, gej.senior, gej.assistant "
+		String sql = "select gej.id, g.id as g_id, g.name, e.id as e_id, e.first_name, e.last_name, e.username, e.password, gej.senior, gej.assistant "
 				+ "from genre_editor_join gej "
 				+ "full join genres g "
 				+ "on gej.genre = g.id "
@@ -61,7 +61,7 @@ public class GEJoinRepo implements GenericRepo<GEJoin> {
 	@Override
 	public Map<Integer, GEJoin> getAll() {
 //		String sql = "select * from genre_editor_join;";
-		String sql = "select gej.id, g.id as g_id, g.name, e.id as e_id, e.first_name, e.last_name, gej.senior, gej.assistant "
+		String sql = "select gej.id, g.id as g_id, g.name, e.id as e_id, e.first_name, e.last_name, e.username, e.password, gej.senior, gej.assistant "
 				+ "from genre_editor_join gej "
 				+ "full join genres g "
 				+ "on gej.genre = g.id "
@@ -131,6 +131,8 @@ public class GEJoinRepo implements GenericRepo<GEJoin> {
 		Genre g = new Genre(rs.getInt("g_id"), rs.getString("name"));
 		j.setGenre(g);
 		Editor e = new Editor(rs.getInt("e_id"), rs.getString("first_name"), rs.getString("last_name"));
+		e.setUsername(rs.getString("username"));
+		e.setPassword(rs.getString("password"));
 		j.setEditor(e);
 		Boolean s = rs.getBoolean("senior");
 		j.setSenior(s);

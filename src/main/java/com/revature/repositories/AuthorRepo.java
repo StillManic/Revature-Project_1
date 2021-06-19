@@ -16,13 +16,15 @@ public class AuthorRepo implements GenericRepo<Author> {
 	
 	@Override
 	public Author add(Author a) {
-		String sql = "insert into authors values (default, ?, ?, ?, ?) returning *;";
+		String sql = "insert into authors values (default, ?, ?, ?, ?, ?, ?) returning *;";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, a.getFirstName());
 			ps.setString(2, a.getLastName());
 			ps.setString(3, a.getBio());
 			ps.setInt(4, a.getPoints());
+			ps.setString(5, a.getUsername());
+			ps.setString(6, a.getPassword());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				a.setId(rs.getInt("id"));

@@ -1,5 +1,13 @@
 package com.revature.models;
 
+import java.lang.reflect.Type;
+
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
 public class Author {
 	private Integer id;
 	private String firstName;
@@ -139,5 +147,21 @@ public class Author {
 	public String toString() {
 		return "Author [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", bio=" + bio + ", points="
 				+ points + ", username=" + username + ", password=" + password + "]";
+	}
+	
+	public static class Deserializer implements JsonDeserializer<Author> {
+		@Override
+		public Author deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+			System.out.println("Deserializing!!!");
+			Author a = new Author();
+			JsonObject jo = json.getAsJsonObject();
+			a.setFirstName(context.deserialize(jo.get("first_name"), String.class));
+			a.setLastName(context.deserialize(jo.get("last_name"), String.class));
+			a.setBio(context.deserialize(jo.get("bio"), String.class));
+			a.setPoints(100);
+			a.setUsername(context.deserialize(jo.get("username"), String.class));
+			a.setPassword(context.deserialize(jo.get("password"), String.class));
+			return a;
+		}
 	}
 }

@@ -29,13 +29,8 @@ public class Utils {
 		Set<Genre> gSet = eToG.get(e);
 		Set<Editor> eSet = gToE.get(g);
 		
-		if (gSet == null) {
-			gSet = new HashSet<Genre>();
-		}
-		
-		if (eSet == null) {
-			eSet = new HashSet<Editor>();
-		}
+		if (gSet == null) gSet = new HashSet<Genre>();
+		if (eSet == null) eSet = new HashSet<Editor>();
 		
 		gSet.add(g);
 		eSet.add(e);

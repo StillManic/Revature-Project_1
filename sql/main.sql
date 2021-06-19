@@ -52,7 +52,8 @@ create table stories (
 	tag_line varchar,
 	completion_date date,
 	approval_status varchar,
-	reason varchar
+	reason varchar,
+	submission_date date
 );
 
 create table genre_editor_join (
@@ -67,6 +68,11 @@ alter table editors add column username varchar(20);
 alter table editors add column password varchar(20);
 alter table authors add column username varchar(20);
 alter table authors add column password varchar(20);
+
+alter table stories add column submission_date date;
+
+update stories set submission_date = '2021-06-18';
+update stories set submission_date = '2021-06-04' where id = 3;
 
 insert into story_types values 
 (default, 'novel', 50),
@@ -114,7 +120,7 @@ where gej.id = 5;
 
 
 
-
+select * from stories where genre = 2;
 
 
 

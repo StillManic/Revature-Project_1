@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.revature.models.Author;
@@ -18,7 +20,7 @@ public class StoryRepo implements GenericRepo<Story> {
 	
 	@Override
 	public Story add(Story s) {
-		String sql = "insert into stories values (default, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning *";
+		String sql = "insert into stories values (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning *";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, s.getTitle());
@@ -30,6 +32,7 @@ public class StoryRepo implements GenericRepo<Story> {
 			ps.setDate(7, s.getCompletionDate());
 			ps.setString(8, s.getApprovalStatus());
 			ps.setString(9, s.getReason());
+			ps.setDate(10, s.getSubmissionDate());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				s.setId(rs.getInt("id"));
@@ -50,6 +53,25 @@ public class StoryRepo implements GenericRepo<Story> {
 			ps.setInt(1, id);
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) return this.make(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public List<Story> getAllByGenre(Genre g) {
+		String sql = "select * from stories where genre = ?;";
+		try {
+			List<Story> list = new ArrayList<Story>();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, g.getId());
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				list.add(this.make(rs));
+			}
+			
+			return list;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -127,6 +149,7 @@ public class StoryRepo implements GenericRepo<Story> {
 		s.setCompletionDate(rs.getDate("completion_date"));
 		s.setApprovalStatus(rs.getString("approval_status"));
 		s.setReason(rs.getString("reason"));
+		s.setSubmissionDate(rs.getDate("submission_date"));
 		return s;
 	}
 

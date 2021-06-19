@@ -3,12 +3,25 @@
 }
 .purple {
     /* color: #551a8b; */
-    color: #7554a3;
+    /* color: #7554a3; */
     /* color: #674099 */
+    color: #360a5f;
 }
 .red {
     /* color: #ea0000; */
     color: #710a03
+}
+.purple-background {
+    background-color: #360a5f;
+}
+.green-background {
+    background-color: #69bb01;
+}
+.light-grey-background {
+    background-color: #555555;
+}
+.red-background {
+    background-color: #710a03;
 }
 
 body {
@@ -71,7 +84,19 @@ input[type="submit"]:hover, input[type="button"]:hover {
     /* color: #d0d0d0; */
     /* background-color: #1d1d1d; */
     color: #69bb01;
-    background-color: #7554a3;
+    background-color: #360a5f;
+}
+
+#logout {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+/* Tables */
+table {
+    color: #69bb01;
+    /* background-color: #360a5f; */
 }
 
 /* Date */
@@ -89,4 +114,39 @@ input[type="submit"]:hover, input[type="button"]:hover {
 
 #vert_align {
     margin-top: 22rem;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: black;
+    background-color: rgba(0, 0, 0, .4);
+}
+
+.modal-content {
+    background-color: #444444;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover, .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
