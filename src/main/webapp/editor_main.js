@@ -22,13 +22,17 @@ function fillProposals() {
 
                 console.log(json);
 
-                let hadOverdue = false;
+                // let hadOverdue = false;
+                let shouldLock = false;
 
                 let table = document.getElementById("proposals");
                 // for (let story of stories) {
                 for (let story of json) {
-                    let overdue = checkOverdue(story.submissionDate);
-                    if (overdue) hadOverdue = true;
+                    let overdue = checkOverdue(story);
+                    let lockOthers = shouldLockOthers(story);
+
+                    // if (overdue) hadOverdue = true;
+                    if (lockOthers) shouldLock = true;
 
                     let tr = document.createElement("tr");
                     
@@ -40,7 +44,8 @@ function fillProposals() {
                         td.setAttribute("class", "green purple-background");
                     }
                     td.innerHTML = story.author.firstName + " " + story.author.lastName;
-                    if (overdue || !hadOverdue) {
+                    // if (overdue || !hadOverdue) {
+                    if (overdue || lockOthers) {
                         td.onclick = () => {
                             handleRowClick(story);
                         }
@@ -55,7 +60,8 @@ function fillProposals() {
                         td.setAttribute("class", "green purple-background");
                     }
                     td.innerHTML = story.title;
-                    if (overdue || !hadOverdue) {
+                    // if (overdue || !hadOverdue) {
+                    if (overdue || lockOthers) {
                         td.onclick = () => {
                             handleRowClick(story);
                         }
@@ -70,7 +76,8 @@ function fillProposals() {
                         td.setAttribute("class", "green purple-background");
                     }
                     td.innerHTML = story.type.name;
-                    if (overdue || !hadOverdue) {
+                    // if (overdue || !hadOverdue) {
+                    if (overdue || lockOthers) {
                         td.onclick = () => {
                             handleRowClick(story);
                         }
@@ -85,7 +92,8 @@ function fillProposals() {
                         td.setAttribute("class", "green purple-background");
                     }
                     td.innerHTML = story.approvalStatus;
-                    if (overdue || !hadOverdue) {
+                    // if (overdue || !hadOverdue) {
+                    if (overdue || lockOthers) {
                         td.onclick = () => {
                             handleRowClick(story);
                         }
@@ -123,8 +131,13 @@ function getDateDifference(submitted) {
     return current - submitted;
 }
 
-function checkOverdue(submissionDate) {
-    return getDateDifference(submissionDate) > time_limit;
+function checkOverdue(story) {
+    console.log(story.title + " has approval status " + story.approvalStatus);
+    return getDateDifference(story.submissionDate) > time_limit;
+}
+
+function shouldLockOthers(story) {
+    return (story.approvalStatus != "submitted" && story.approvalStatus != "approved_assistant");
 }
 
 function populateStaticForm() {
@@ -149,7 +162,7 @@ function populateStaticForm() {
         let sf_completion_date = document.getElementById("sf_completion_date");
         let sf_status = document.getElementById("sf_status");
 
-        let overdue = checkOverdue(story.submissionDate);
+        let overdue = checkOverdue(story);
 
         sf_sub_date.innerHTML = story.submissionDate;
 
@@ -193,51 +206,88 @@ function populateStaticForm() {
         approveBtn.onclick = () => {
             approve(story);
         }
+
+        function approve(story) {
+            let flag = "/approve_story";
+        
+            let json = JSON.stringify(story);
+        
+            let xhttp = new XMLHttpRequest();
+            xhttp.open("POST", url + flag, true);
+            xhttp.send(json);
+        
+            xhttp.onreadystatechange = () => {
+                if (xhttp.readyState == 4) {
+                    if (xhttp.status == 200) {
+                        console.log("Approved story " + json);
+                        sf_status.innerHTML = "Approved";
+                    }
+                }
+            }
+        }
+
+        
+
+        /* Handle Modal Reason */
+        let modal_reason = document.getElementById("modal_reason");
         denyBtn.onclick = () => {
             // deny(story);
-            modal.style.display = "block";
-        }
-        /* Handle Modal */
-        let modal = document.getElementById("modal");
-        
-        infoBtn.onclick = () => {
-            requestInfo(story);
-            // modal.style.display = "block";
+            modal_reason.style.display = "block";
         }
 
-        let sendBtn = document.getElementById("send_reason_button");
-
-        sendBtn.onclick = () => {
+        let sendReasonBtn = document.getElementById("send_reason_button");
+        sendReasonBtn.onclick = () => {
             let reason = document.getElementById("reason").value;
             if (reason.length > 0) {
-                modal.style.display = "none";
+                modal_reason.style.display = "none";
                 deny(story, reason);
             }
         }
+        
+        /* Handle Modal Info */
+        let modal_info = document.getElementById("modal_info");
+        infoBtn.onclick = () => {
+            modal_info.style.display = "block";
+        }
+
+        /* Fill Persons Dropdown */
+        let ps = document.getElementById("person_select");
+        function makeOption(person, selected) {
+            let option = document.createElement("option");
+            if (selected) {
+                option.setAttribute("selected", "selected");
+            }
+            option.setAttribute("value", person.firstName + " " + person.lastName);
+            option.innerHTML = person.firstName + " " + person.lastName;
+            ps.appendChild(option);
+        }
+
+        makeOption(story.author, true);
+
+        if (story.approvalStatus == "approved_assistant") {
+            makeOption(story.assistant, false);
+        }
+
+        if (story.approvalStatus == "approved_editor") {
+            makeOption(story.editor, false);
+        }
+        
+        let sendInfoBtn = document.getElementById("send_info_button");
+        sendInfoBtn.onclick = () => {
+            let prompt = document.getElementById("prompt").value;
+            let person = document.getElementById("person_select").value;
+            if (prompt.length > 0) {
+                modal_info.style.display = "none";
+                requestInfo(prompt, person);
+            }
+        }
+        
 
         // let span = document.getElementsByClassName("close")[0];
 
         // span.onclick = () => {
         //     modal.style.display = "none";
         // }
-    }
-}
-
-function approve(story) {
-    let flag = "/approve_story";
-
-    let json = JSON.stringify(story);
-
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                console.log("Approved story " + json);
-            }
-        }
     }
 }
 
@@ -260,15 +310,30 @@ function deny(story, reason) {
         if (xhttp.readyState == 4) {
             if (xhttp.status == 200) {
                 console.log("Denied story " + json);
+                story = JSON.parse(json);
+
+                let reason_box_label = document.getElementById("label_for_sf_reason");
+                let reason_box = document.getElementById("sf_reason");
+
+                reason_box_label.style.display = "block";
+                reason_box.style.display = "block";
+
+                reason_box.innerHTML = story.reason;
+
+                // let submitted_box = document.getElementById("sf_submission_date");
+                // submitted_box = story.submissionDate;
             }
         }
     }
 }
 
-function requestInfo(story) {
+function requestInfo(story, person) {
     let flag = "/request_info";
 
-    let json = JSON.stringify(story);
+    let packet = [story, person];
+
+    let json = JSON.stringify(packet);
+    console.log("sending request for information! - " + json);
 
     let xhttp = new XMLHttpRequest();
     xhttp.open("POST", url + flag, true);
@@ -285,6 +350,16 @@ function requestInfo(story) {
 
 function sfBack() {
     window.location.href = "editor_main.html";
+}
+
+function closeInfoModal() {
+    let modal_info = document.getElementById("modal_info");
+    modal_info.style.display = "none";
+}
+
+function closeReasonModal() {
+    let modal_reason = document.getElementById("modal_reason");
+    modal_reason.style.display = "none";
 }
 
 function logout() {

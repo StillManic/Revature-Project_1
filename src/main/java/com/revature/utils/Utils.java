@@ -1,9 +1,7 @@
 package com.revature.utils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,7 +36,7 @@ public class Utils {
 		gToE.put(g, eSet);
 		eToG.put(e, gSet);
 		
-		GEJoin j = new GEJoin(g, e, senior, assistant);
+		GEJoin j = new GEJoin(g, e);
 		gejr.add(j);
 	}
 	

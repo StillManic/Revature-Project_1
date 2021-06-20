@@ -12,12 +12,32 @@
         <script src="editor_main.js"></script>
     </head>
     <body onload="populateStaticForm()">
-        <div id="modal" class="modal">
+        <!-- Denial Reason Modal -->
+        <div id="modal_reason" class="modal">
             <div class="modal-content">
+                <input type="button" name="close_info_modal" value="X" id="close_info_modal" onclick="closeReasonModal()">
                 <label for="reason">Please provide a reason for denial</label>
                 <textarea name="reason" id="reason" cols="30" rows="10"></textarea>
                 <input type="button" name="send_reason" value="Send" id="send_reason_button">
                 <!-- <span class="close">&times;</span> -->
+            </div>
+        </div>
+
+        <!-- Information Request Modal -->
+        <div id="modal_info" class="modal">
+            <div class="modal-content">
+                <input type="button" name="close_info_modal" value="X" id="close_info_modal" onclick="closeInfoModal()">
+                <!-- Person Dropdown -->
+                <div class="row">
+					<label for="person_select">Who are you requesting information from?</label>
+					<select name="person_select" id="person_select">
+						<!-- Filled by javascript "fillPersons()" -->
+					</select>
+				</div>
+
+                <label for="prompt">What information would you like to request?</label>
+                <textarea name="prompt" id="prompt" cols="30" rows="10"></textarea>
+                <input type="button" name="send_info_request" value="Send" id="send_info_button">
             </div>
         </div>
 
@@ -31,6 +51,12 @@
 
             <label for="sf_submission_date" class="h4">Submitted</label>
             <h5 id="sf_submission_date">-</h5>
+            
+            <label for="sf_status" class="h4">Status</label>
+            <h5 id="sf_status">-</h5>
+
+            <label for="sf_reason" id="label_for_sf_reason" class="h4" style="display: none">Reason</label>
+            <h5 id="sf_reason" style="display: none">-</h5>
 
             <br>
 
@@ -57,9 +83,6 @@
 
             <label for="sf_completion_date" class="h4">Completion Date</label>
             <h5 id="sf_completion_date">-</h5>
-
-            <label for="sf_status" class="h4">Status</label>
-            <h5 id="sf_status">-</h5>
 
             <label for="sf_description" class="h4">Description</label>
             <h5 id="sf_description">-</h5>

@@ -29,7 +29,9 @@ create table editors (
 	first_name varchar(20),
 	last_name varchar(20),
 	username varchar(20),
-	password varchar(20)
+	password varchar(20),
+	senior bool,
+	assistant bool
 );
 
 create table authors (
@@ -53,15 +55,16 @@ create table stories (
 	completion_date date,
 	approval_status varchar,
 	reason varchar,
-	submission_date date
+	submission_date date,
+	assistant int references editors,
+	editor int references editors,
+	senior int references editors
 );
 
 create table genre_editor_join (
 	id serial primary key,
 	genre int references genres(id),
-	editor int references editors(id),
-	senior bool,
-	assistant bool
+	editor int references editors(id)
 );
 
 alter table editors add column username varchar(20);
@@ -70,9 +73,30 @@ alter table authors add column username varchar(20);
 alter table authors add column password varchar(20);
 
 alter table stories add column submission_date date;
+alter table stories add column assistant int references editors;
+alter table stories add column editor int references editors;
+alter table stories add column senior int references editors;
+
+alter table editors add column senior bool;
+alter table editors add column assistant bool;
 
 update stories set submission_date = '2021-06-18';
 update stories set submission_date = '2021-06-04' where id = 3;
+update stories set assistant = 2 where id = 3;
+
+select * from genres;
+select * from editors;
+
+insert into genre_editor_join values
+(default, 1, 2),
+(default, 2, 2),
+(default, 3, 2),
+(default, 1, 3),
+(default, 2, 4),
+(default, 3, 1),
+(default, 1, 5),
+(default, 2, 5),
+(default, 3, 5);
 
 insert into story_types values 
 (default, 'novel', 50),
@@ -100,12 +124,12 @@ call "Project_1".resetTables();
 
 
 
-select gej.id, g.id as g_id, g.name, e.id as e_id, e.first_name, e.last_name, gej.senior, gej.assistant
+select gej.id, g.id as g_id, g.name, e.id as e_id, e.first_name, e.last_name, e.senior, e.assistant
 from genre_editor_join gej 
 full join genres g
 on gej.genre = g.id
 full join editors e
-on gej.editor = e.id
+on gej.editor = e.id;
 order by gej.senior desc, gej.assistant desc;
 
 
@@ -122,6 +146,7 @@ where gej.id = 5;
 
 select * from stories where genre = 2;
 
+select * from stories where genre = 1 and approval_status = 'approved_assistant';
 
-
-
+delete from editors where id = 6;
+drop table genre_editor_join;

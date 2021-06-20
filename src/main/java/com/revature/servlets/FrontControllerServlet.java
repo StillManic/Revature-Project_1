@@ -111,9 +111,13 @@ public class FrontControllerServlet extends HttpServlet {
 				break;
 			}
 			case "logout": {
+				String pageURL = "";
+				Object loggedIn = session.getAttribute("logged_in");
+				if (loggedIn instanceof Author) pageURL = "index.html";
+				if (loggedIn instanceof Editor) pageURL = "login_editors.html";
 				System.out.println("Logging out!");
+				response.getWriter().append(pageURL);
 				session.invalidate();
-				response.getWriter().append("index.html");
 				break;
 			}
 			case "get_story_types": {
@@ -140,7 +144,26 @@ public class FrontControllerServlet extends HttpServlet {
 				Set<Genre> genres = Utils.getGenres(e);
 				List<Story> stories = new ArrayList<Story>();
 				
-				for (Genre g : genres) stories.addAll(new StoryRepo().getAllByGenre(g));
+//				for (Genre g : genres) stories.addAll(new StoryRepo().getAllByGenre(g));
+				for (Genre g : genres) {
+					if (e.getSenior()) {
+						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "approved_editor"));
+					} else if (e.getAssistant()) {
+						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "submitted"));
+					} else {
+						String status = "approved_assistant";
+						if (g.getName().equals("Sci-fi")) {
+							Genre fantasy = new GenreRepo().getByName("Fantasy");
+							stories.addAll(new StoryRepo().getAllByGenreAndStatus(fantasy, status));
+						} else if (g.getName().equals("Fantasy")) {
+							Genre horror = new GenreRepo().getByName("Horror");
+							stories.addAll(new StoryRepo().getAllByGenreAndStatus(horror, status));
+						} else if (g.getName().equals("Horror")) {
+							Genre scifi = new GenreRepo().getByName("Sci-fi");
+							stories.addAll(new StoryRepo().getAllByGenreAndStatus(scifi, status));
+						}
+					}
+				}
 				
 				json = this.gson.toJson(stories);
 				
@@ -161,31 +184,35 @@ public class FrontControllerServlet extends HttpServlet {
 				break;
 			}
 			case "approve_story": {
+				Editor e = (Editor) session.getAttribute("logged_in");
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
 				String status = s.getApprovalStatus();
 				switch (status) {
 					case "submitted":
 						s.setApprovalStatus("approved_assistant");
+						s.setAssistant(e);
 						break;
 					case "approved_assistant":
 						s.setApprovalStatus("approved_editor");
+						s.setEditor(e);
 						break;
 					case "approved_editor":
 						s.setApprovalStatus("approved_senior");
+						s.setSenior(e);
 						break;
 					case "approved_senior":
-						s.setApprovalStatus("waiting_for_draft");
-						break;
-					case "waiting_for_draft":
 						s.setApprovalStatus("draft_approved");
 						break;
 					default: break;
 				}
-				
+				new StoryRepo().update(s);
 				
 				break;
 			}
 			case "deny_story": {
+				Story s = this.gson.fromJson(request.getReader(), Story.class);
+				System.out.println(s);
+				new StoryRepo().update(s);
 				break;
 			}
 			case "request_info": {

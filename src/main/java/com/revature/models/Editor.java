@@ -6,6 +6,8 @@ public class Editor {
 	private String lastName;
 	private String username;
 	private String password;
+	private Boolean senior;
+	private Boolean assistant;
 
 	public Editor() {}
 	
@@ -67,14 +69,32 @@ public class Editor {
 		this.password = password;
 	}
 
+	public Boolean getSenior() {
+		return senior;
+	}
+
+	public void setSenior(Boolean senior) {
+		this.senior = senior;
+	}
+
+	public Boolean getAssistant() {
+		return assistant;
+	}
+
+	public void setAssistant(Boolean assistant) {
+		this.assistant = assistant;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + ((assistant == null) ? 0 : assistant.hashCode());
 		result = prime * result + ((firstName == null) ? 0 : firstName.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((lastName == null) ? 0 : lastName.hashCode());
 		result = prime * result + ((password == null) ? 0 : password.hashCode());
+		result = prime * result + ((senior == null) ? 0 : senior.hashCode());
 		result = prime * result + ((username == null) ? 0 : username.hashCode());
 		return result;
 	}
@@ -88,6 +108,11 @@ public class Editor {
 		if (getClass() != obj.getClass())
 			return false;
 		Editor other = (Editor) obj;
+		if (assistant == null) {
+			if (other.assistant != null)
+				return false;
+		} else if (!assistant.equals(other.assistant))
+			return false;
 		if (firstName == null) {
 			if (other.firstName != null)
 				return false;
@@ -108,6 +133,11 @@ public class Editor {
 				return false;
 		} else if (!password.equals(other.password))
 			return false;
+		if (senior == null) {
+			if (other.senior != null)
+				return false;
+		} else if (!senior.equals(other.senior))
+			return false;
 		if (username == null) {
 			if (other.username != null)
 				return false;
@@ -119,6 +149,6 @@ public class Editor {
 	@Override
 	public String toString() {
 		return "Editor [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", username=" + username
-				+ ", password=" + password + "]";
+				+ ", password=" + password + ", senior=" + senior + ", assistant=" + assistant + "]";
 	}
 }

@@ -15,13 +15,15 @@ public class EditorRepo implements GenericRepo<Editor> {
 	
 	@Override
 	public Editor add(Editor e) {
-		String sql = "insert into editors values(default, ?, ?, ?, ?) returning *;";
+		String sql = "insert into editors values(default, ?, ?, ?, ?, ?, ?) returning *;";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, e.getFirstName());
 			ps.setString(2, e.getLastName());
 			ps.setString(3, e.getUsername());
 			ps.setString(4, e.getPassword());
+			ps.setBoolean(5, e.getSenior());
+			ps.setBoolean(6, e.getAssistant());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				e.setId(rs.getInt("id"));
@@ -118,6 +120,8 @@ public class EditorRepo implements GenericRepo<Editor> {
 		e.setLastName(rs.getString("last_name"));
 		e.setUsername(rs.getString("username"));
 		e.setPassword(rs.getString("password"));
+		e.setSenior(rs.getBoolean("senior"));
+		e.setAssistant(rs.getBoolean("assistant"));
 		return e;
 	}
 }
