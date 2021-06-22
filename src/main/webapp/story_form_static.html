@@ -9,7 +9,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
 
         <link rel="stylesheet" href="styles/styles.css">
-        <script src="editor_main.js"></script>
+        <script src="editor_story_list.js"></script>
     </head>
     <body onload="populateStaticForm()">
         <!-- Denial Reason Modal -->
@@ -41,9 +41,22 @@
             </div>
         </div>
 
-        <div class="container">
+        <!-- Information Response Modal -->
+        <div id="modal_response" class="modal">
+            <div class="modal-content">
+                <input type="button" name="close_info_modal" value="X" id="close_info_modal" onclick="closeResponseModal()">
+                <label for="request" id="request_label">You asked - for the following information:</label>
+                <h3 class="purple light-grey-background" id="request">-</h3>
+                <label for="response">The response was:</label>
+                <h3 class="purple light-grey-background" id="response">-</h3>
+            </div>
+        </div>
+
+        <div id="main_div" class="container">
+            <input type="button" name="update" value="Update" id="update_button" style="display: none">
             <input type="button" name="approve" value="Approve" id="approve_button">
             <input type="button" name="deny" value="Deny" id="deny_button">
+            <input type="button" name="res_info" value="View Response" id="response_button" style="display: none">
             <input type="button" name="req_info" value="Request More Information" id="info_button">
             <input type="button" name="back" value="Back" onclick="sfBack()">
 

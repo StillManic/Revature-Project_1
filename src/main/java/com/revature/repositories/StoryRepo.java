@@ -21,7 +21,7 @@ public class StoryRepo implements GenericRepo<Story> {
 	
 	@Override
 	public Story add(Story s) {
-		String sql = "insert into stories values (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning *";
+		String sql = "insert into stories values (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning *";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, s.getTitle());
@@ -40,6 +40,10 @@ public class StoryRepo implements GenericRepo<Story> {
 			else ps.setInt(12, s.getEditor().getId());
 			if (s.getSenior() == null) ps.setNull(13, java.sql.Types.INTEGER);
 			else ps.setInt(13, s.getSenior().getId());
+			ps.setString(14, s.getRequest());
+			ps.setString(15, s.getResponse());
+			ps.setString(16, s.getReceiverName());
+			ps.setString(17, s.getRequestorName());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				s.setId(rs.getInt("id"));
@@ -60,6 +64,47 @@ public class StoryRepo implements GenericRepo<Story> {
 			ps.setInt(1, id);
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) return this.make(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public List<Story> getAllByReceiverName(String firstName, String lastName) {
+		String name = firstName + " " + lastName;
+		List<Story> list = new ArrayList<Story>();
+		String sql = "select * from stories where receiver_name = ?;";
+		try {
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, name);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				// TODO: move this check to Services
+				Story s = this.make(rs);
+				if (s.getResponse() == null || s.getResponse().equals("")) list.add(s);
+//				list.add(this.make(rs));
+			}
+			
+			return list;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public List<Story> getAllByAuthor(Integer a_id) {
+		String sql = "select * from stories where author = ?;";
+		try {
+			List<Story> list = new ArrayList<Story>();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, a_id);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				list.add(this.make(rs));
+			}
+			
+			return list;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -147,7 +192,7 @@ public class StoryRepo implements GenericRepo<Story> {
 
 	@Override
 	public boolean update(Story s) {
-		String sql = "update stories set title = ?, description = ?, tag_line = ?, completion_date = ?, approval_status = ?, reason = ?, assistant = ?, editor = ?, senior = ? where id = ? returning *;";
+		String sql = "update stories set title = ?, description = ?, tag_line = ?, completion_date = ?, approval_status = ?, reason = ?, assistant = ?, editor = ?, senior = ?, request = ?, response = ?, receiver_name = ?, requestor_name = ? where id = ? returning *;";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, s.getTitle());
@@ -162,7 +207,11 @@ public class StoryRepo implements GenericRepo<Story> {
 			else ps.setInt(8, s.getEditor().getId());
 			if (s.getSenior() == null) ps.setNull(9, java.sql.Types.INTEGER);
 			else ps.setInt(9, s.getSenior().getId());
-			ps.setInt(10, s.getId());
+			ps.setString(10, s.getRequest());
+			ps.setString(11, s.getResponse());
+			ps.setString(12, s.getReceiverName());
+			ps.setString(13, s.getRequestorName());
+			ps.setInt(14, s.getId());
 			return ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -208,6 +257,10 @@ public class StoryRepo implements GenericRepo<Story> {
 		s.setEditor(editor);
 		Editor senior = new EditorRepo().getById(rs.getInt("senior"));
 		s.setSenior(senior);
+		s.setRequest(rs.getString("request"));
+		s.setResponse(rs.getString("response"));
+		s.setReceiverName(rs.getString("receiver_name"));
+		s.setRequestorName(rs.getString("requestor_name"));
 		return s;
 	}
 

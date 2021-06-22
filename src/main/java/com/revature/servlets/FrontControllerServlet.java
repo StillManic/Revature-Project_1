@@ -77,7 +77,7 @@ public class FrontControllerServlet extends HttpServlet {
 					System.out.println("Created new Author " + a + " and logged in!");
 					session.setAttribute("logged_in", a);
 					// TODO: change this to "author_main.html" when it exits!!!
-					response.getWriter().append("editor_main.html");
+					response.getWriter().append("story_proposal_form.html");
 				} else {
 					System.out.println("Failed to create new Author account!");
 				}
@@ -92,6 +92,7 @@ public class FrontControllerServlet extends HttpServlet {
 					System.out.println("Editor " + e.getFirstName() + " has logged in!");
 					session.setAttribute("logged_in", e);
 					response.getWriter().append("editor_main.html");
+//					response.getWriter().append("editor_story_list.html");
 				} else {
 					System.out.println("Failed to login with credentials: username=" + info.username + " password=" + info.password);
 				}
@@ -138,13 +139,17 @@ public class FrontControllerServlet extends HttpServlet {
 				System.out.println(story);
 				break;
 			}
-			case "get_proposals": {
+			case "get_author_proposals": {
+				Author a = (Author) session.getAttribute("logged_in");
+				List<Story> stories = new StoryRepo().getAllByAuthor(a.getId());
+				json = this.gson.toJson(stories);
+				response.getWriter().append(json);
+			}
+			case "get_editor_proposals": {
 				Editor e = (Editor) session.getAttribute("logged_in");
-				if (e == null) System.out.println("editor null!!!!");
 				Set<Genre> genres = Utils.getGenres(e);
 				List<Story> stories = new ArrayList<Story>();
 				
-//				for (Genre g : genres) stories.addAll(new StoryRepo().getAllByGenre(g));
 				for (Genre g : genres) {
 					if (e.getSenior()) {
 						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "approved_editor"));
@@ -167,7 +172,6 @@ public class FrontControllerServlet extends HttpServlet {
 				
 				json = this.gson.toJson(stories);
 				
-//				String[] jsons = new String[] { this.gson.toJson(stories), "" };
 				response.getWriter().append(json);
 				break;
 			}
@@ -216,6 +220,80 @@ public class FrontControllerServlet extends HttpServlet {
 				break;
 			}
 			case "request_info": {
+				String[] strs = this.gson.fromJson(request.getReader(), String[].class);
+				Story s = this.gson.fromJson(strs[0], Story.class);
+				String receiverName = this.gson.fromJson(strs[1], String.class);
+				s.setReceiverName(receiverName);
+				new StoryRepo().update(s);
+				System.out.println("Requesting info!!! " + s);
+				break;
+			}
+			case "get_requests": {
+				Object logged_in = session.getAttribute("logged_in");
+				String[] receiverName = new String[2];
+				
+				if (logged_in instanceof Editor) {
+					Editor e = (Editor) logged_in;
+					receiverName[0] = e.getFirstName();
+					receiverName[1] = e.getLastName();
+				} else if (logged_in instanceof Author) {
+					Author a = (Author) logged_in;
+					receiverName[0] = a.getFirstName();
+					receiverName[1] = a.getLastName();
+				}
+				
+				List<Story> stories = new StoryRepo().getAllByReceiverName(receiverName[0], receiverName[1]);
+				response.getWriter().append(this.gson.toJson(stories));
+				break;
+			}
+			case "save_response": {
+				Story s = this.gson.fromJson(request.getReader(), Story.class);
+				new StoryRepo().update(s);
+				break;
+			}
+			case "get_editor_main_labels": {
+				String[] counts = new String[4];
+				
+				Editor e = (Editor) session.getAttribute("logged_in");
+				if (e == null) System.out.println("get_editor_main_labels: editor null!!!!");
+				Set<Genre> genres = Utils.getGenres(e);
+				List<Story> stories = new ArrayList<Story>();
+				
+				for (Genre g : genres) {
+					if (e.getSenior()) {
+						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "approved_editor"));
+					} else if (e.getAssistant()) {
+						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "submitted"));
+					} else {
+						String status = "approved_assistant";
+						if (g.getName().equals("Sci-fi")) {
+							Genre fantasy = new GenreRepo().getByName("Fantasy");
+							stories.addAll(new StoryRepo().getAllByGenreAndStatus(fantasy, status));
+						} else if (g.getName().equals("Fantasy")) {
+							Genre horror = new GenreRepo().getByName("Horror");
+							stories.addAll(new StoryRepo().getAllByGenreAndStatus(horror, status));
+						} else if (g.getName().equals("Horror")) {
+							Genre scifi = new GenreRepo().getByName("Sci-fi");
+							stories.addAll(new StoryRepo().getAllByGenreAndStatus(scifi, status));
+						}
+					}
+				}
+				
+				List<Story> infoReqs = new StoryRepo().getAllByReceiverName(e.getFirstName(), e.getLastName());
+				
+				counts[0] = e.getFirstName() + " " + e.getLastName();
+				counts[1] = "" + stories.size();
+				counts[2] = "" + infoReqs.size();
+				counts[3] = "" + 0;		// # drafts
+				
+				response.getWriter().append(gson.toJson(counts));
+				
+				break;
+			}
+			case "update_details": {
+				Story s = gson.fromJson(request.getReader(), Story.class);
+				new StoryRepo().update(s);
+				// notify author somehow
 				break;
 			}
 			default: break;

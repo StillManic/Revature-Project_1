@@ -65,6 +65,21 @@ public class EditorRepo implements GenericRepo<Editor> {
 		
 		return null;
 	}
+	
+	public Editor getByName(String firstName, String lastName) {
+		String sql = "select * from editors where first_name = ? and last_name = ?;";
+		try {
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, firstName);
+			ps.setString(2, lastName);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) return this.make(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 
 	@Override
 	public Map<Integer, Editor> getAll() {

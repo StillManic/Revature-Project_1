@@ -87,11 +87,13 @@ input[type="submit"]:hover, input[type="button"]:hover {
     background-color: #360a5f;
 }
 
-#logout {
+#logout, #back {
     position: absolute;
     top: 15px;
     right: 15px;
 }
+
+#logout_button_label {}
 
 /* Tables */
 table {
@@ -113,7 +115,7 @@ table {
 } */
 
 #vert_align {
-    margin-top: 22rem;
+    margin-top: 15rem;
 }
 
 /* Modal */

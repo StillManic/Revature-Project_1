@@ -1,0 +1,19 @@
+-make author_main.html
+
+-modify story_form_static.js so that 
+    - 1: locked proposals show as grey
+    - 2: instead of accepted proposals dissapearing, they become green (and move to the bottom of the list?)
+-notify author of changes made to a proposal by a senior editor
+
+-requested info
+    -create way for author to provide requested info
+
+-if changes are made to a proposal, author must be able to approve the changes or cancel the request
+-fix dropdown on request info modal
+
+-create way for author to provide final draft of a proposal
+    -create way for draft to be approved by the appropriate people
+
+-handle "on hold" proposals for authors that do not have sufficient points
+-make sure points are subtracted from an author as soon as the form is sumbitted
+-make sure "submitted" goes directly to "approved_assistant" if the relevant genre committee doesn't have an assistant editor

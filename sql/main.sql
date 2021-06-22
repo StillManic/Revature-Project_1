@@ -58,7 +58,11 @@ create table stories (
 	submission_date date,
 	assistant int references editors,
 	editor int references editors,
-	senior int references editors
+	senior int references editors,
+	request varchar,
+	response varchar,
+	receiver_name varchar(41),
+	requestor_name varchar(41)
 );
 
 create table genre_editor_join (
@@ -76,13 +80,19 @@ alter table stories add column submission_date date;
 alter table stories add column assistant int references editors;
 alter table stories add column editor int references editors;
 alter table stories add column senior int references editors;
+alter table stories add column request varchar;
+alter table stories add column response varchar;
+alter table stories add column receiver_name varchar(41);
+alter table stories add column requestor_name varchar(41);
 
 alter table editors add column senior bool;
 alter table editors add column assistant bool;
 
 update stories set submission_date = '2021-06-18';
 update stories set submission_date = '2021-06-04' where id = 3;
-update stories set assistant = 2 where id = 3;
+update stories set assistant = null, editor = null;
+
+delete from stories where id = 5;
 
 select * from genres;
 select * from editors;
