@@ -21,7 +21,7 @@ public class StoryRepo implements GenericRepo<Story> {
 	
 	@Override
 	public Story add(Story s) {
-		String sql = "insert into stories values (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning *";
+		String sql = "insert into stories values (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning *";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, s.getTitle());
@@ -44,6 +44,8 @@ public class StoryRepo implements GenericRepo<Story> {
 			ps.setString(15, s.getResponse());
 			ps.setString(16, s.getReceiverName());
 			ps.setString(17, s.getRequestorName());
+			ps.setString(18, s.getDraft());
+			ps.setBoolean(19, s.getModified());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				s.setId(rs.getInt("id"));
@@ -192,7 +194,7 @@ public class StoryRepo implements GenericRepo<Story> {
 
 	@Override
 	public boolean update(Story s) {
-		String sql = "update stories set title = ?, description = ?, tag_line = ?, completion_date = ?, approval_status = ?, reason = ?, assistant = ?, editor = ?, senior = ?, request = ?, response = ?, receiver_name = ?, requestor_name = ? where id = ? returning *;";
+		String sql = "update stories set title = ?, description = ?, tag_line = ?, completion_date = ?, approval_status = ?, reason = ?, assistant = ?, editor = ?, senior = ?, request = ?, response = ?, receiver_name = ?, requestor_name = ?, draft = ?, modified = ? where id = ? returning *;";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, s.getTitle());
@@ -211,7 +213,9 @@ public class StoryRepo implements GenericRepo<Story> {
 			ps.setString(11, s.getResponse());
 			ps.setString(12, s.getReceiverName());
 			ps.setString(13, s.getRequestorName());
-			ps.setInt(14, s.getId());
+			ps.setString(14, s.getDraft());
+			ps.setBoolean(15, s.getModified());
+			ps.setInt(16, s.getId());
 			return ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -261,6 +265,8 @@ public class StoryRepo implements GenericRepo<Story> {
 		s.setResponse(rs.getString("response"));
 		s.setReceiverName(rs.getString("receiver_name"));
 		s.setRequestorName(rs.getString("requestor_name"));
+		s.setDraft(rs.getString("draft"));
+		s.setModified(rs.getBoolean("modified"));
 		return s;
 	}
 

@@ -13,16 +13,6 @@ import com.revature.repositories.GenreRepo;
 import com.revature.repositories.StoryTypeRepo;
 
 public class Story {
-//	public enum StatusLevel {
-//		SUBMITTED,
-//		ASSISTANT_APPROVED,
-//		ASSISTANT_URGENT,
-//		EDITOR_APPROVED,
-//		EDITOR_URGENT,
-//		SENIOR_APPROVED,
-//		SENIOR_URGENT,
-//		DRAFT_APPROVED
-//	}
 	private Integer id;
 	private String title;
 	private Genre genre;
@@ -38,40 +28,14 @@ public class Story {
 	private String response;
 	private String receiverName;
 	private String requestorName;
+	private String draft;
+	private Boolean modified;
 	// These are null until the proposal is approved by that level
 	private Editor assistant;
 	private Editor editor;
 	private Editor senior;
 	
 	public Story() {}
-	
-//	public static String getStatusString(StatusLevel level) {
-//		switch (level) {
-//			case SUBMITTED: return "submitted";
-//			case ASSISTANT_APPROVED: return "assistant_approved";
-//			case ASSISTANT_URGENT: return "assistant_urgent";
-//			case EDITOR_APPROVED: return "editor_approved";
-//			case EDITOR_URGENT: return "editor_urgent";
-//			case SENIOR_APPROVED: return "senior_approved";
-//			case SENIOR_URGENT: return "senior_urgent";
-//			case DRAFT_APPROVED: return "draft_approved";
-//			default: return null;
-//		}
-//	}
-	
-//	public static StatusLevel getStatusLevel(String level) {
-//		switch (level.toLowerCase()) {
-//			case "submitted": return StatusLevel.SUBMITTED;
-//			case "assistant_approved": return StatusLevel.ASSISTANT_APPROVED;
-//			case "assistant_urgent": return StatusLevel.ASSISTANT_URGENT;
-//			case "editor_approved": return StatusLevel.EDITOR_APPROVED;
-//			case "editor_urgent": return StatusLevel.EDITOR_URGENT;
-//			case "senior_approved": return StatusLevel.SENIOR_APPROVED;
-//			case "senior_urgent": return StatusLevel.SENIOR_URGENT;
-//			case "draft_approved": return StatusLevel.DRAFT_APPROVED;
-//			default: return null;
-//		}
-//	}
 
 	public Integer getId() {
 		return id;
@@ -193,6 +157,22 @@ public class Story {
 		this.requestorName = requestorName;
 	}
 
+	public String getDraft() {
+		return draft;
+	}
+
+	public void setDraft(String draft) {
+		this.draft = draft;
+	}
+
+	public Boolean getModified() {
+		return modified;
+	}
+
+	public void setModified(Boolean modified) {
+		this.modified = modified;
+	}
+
 	public Editor getAssistant() {
 		return assistant;
 	}
@@ -226,9 +206,11 @@ public class Story {
 		result = prime * result + ((author == null) ? 0 : author.hashCode());
 		result = prime * result + ((completionDate == null) ? 0 : completionDate.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((draft == null) ? 0 : draft.hashCode());
 		result = prime * result + ((editor == null) ? 0 : editor.hashCode());
 		result = prime * result + ((genre == null) ? 0 : genre.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((modified == null) ? 0 : modified.hashCode());
 		result = prime * result + ((reason == null) ? 0 : reason.hashCode());
 		result = prime * result + ((receiverName == null) ? 0 : receiverName.hashCode());
 		result = prime * result + ((request == null) ? 0 : request.hashCode());
@@ -276,6 +258,11 @@ public class Story {
 				return false;
 		} else if (!description.equals(other.description))
 			return false;
+		if (draft == null) {
+			if (other.draft != null)
+				return false;
+		} else if (!draft.equals(other.draft))
+			return false;
 		if (editor == null) {
 			if (other.editor != null)
 				return false;
@@ -290,6 +277,11 @@ public class Story {
 			if (other.id != null)
 				return false;
 		} else if (!id.equals(other.id))
+			return false;
+		if (modified == null) {
+			if (other.modified != null)
+				return false;
+		} else if (!modified.equals(other.modified))
 			return false;
 		if (reason == null) {
 			if (other.reason != null)
@@ -353,8 +345,9 @@ public class Story {
 				.append(completionDate).append(", submissionDate=").append(submissionDate).append(", approvalStatus=")
 				.append(approvalStatus).append(", reason=").append(reason).append(", request=").append(request)
 				.append(", response=").append(response).append(", receiverName=").append(receiverName)
-				.append(", requestorName=").append(requestorName).append(", assistant=").append(assistant)
-				.append(", editor=").append(editor).append(", senior=").append(senior).append("]");
+				.append(", requestorName=").append(requestorName).append(", draft=").append(draft).append(", modified=")
+				.append(modified).append(", assistant=").append(assistant).append(", editor=").append(editor)
+				.append(", senior=").append(senior).append("]");
 		return builder.toString();
 	}
 	
@@ -363,6 +356,7 @@ public class Story {
 		public Story deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			Story story = new Story();
 			JsonObject jo = json.getAsJsonObject();
+			System.out.println(jo);
 			if (jo.has("author")) {
 				// TODO: move this to AuthorServices
 				story.setAuthor(context.deserialize(jo.get("author"), Author.class));
@@ -378,9 +372,21 @@ public class Story {
 			}
 			story.setTitle(context.deserialize(jo.get("title"), String.class));
 			// TODO: move this to GenreServices!!!
-			story.setGenre(context.deserialize(jo.get("genre"), Genre.class));
+			JsonElement gElem = jo.get("genre");
+			if (gElem.isJsonObject()) {
+				story.setGenre(context.deserialize(gElem, Genre.class));
+			} else {
+				Genre g = new GenreRepo().getByName(context.deserialize(jo.get("genre"), String.class));
+				story.setGenre(g);
+			}
 			// TODO: move this to StoryTypeServices!!!
-			story.setType(context.deserialize(jo.get("type"), StoryType.class));
+			JsonElement tElem = jo.get("type");
+			if (tElem.isJsonObject()) {
+				story.setType(context.deserialize(tElem, StoryType.class));
+			} else {
+				StoryType t = new StoryTypeRepo().getByName(context.deserialize(jo.get("type"), String.class));
+				story.setType(t);
+			}
 			story.setDescription(context.deserialize(jo.get("description"), String.class));
 			story.setTagLine(context.deserialize(jo.get("tagLine"), String.class));
 			story.setCompletionDate(context.deserialize(jo.get("completionDate"), Date.class));
@@ -389,6 +395,8 @@ public class Story {
 			story.setResponse(context.deserialize(jo.get("response"), String.class));
 			story.setReceiverName(context.deserialize(jo.get("receiverName"), String.class));
 			story.setRequestorName(context.deserialize(jo.get("requestorName"),	String.class));
+			story.setDraft(context.deserialize(jo.get("draft"), String.class));
+			story.setModified(context.deserialize(jo.get("modified"), Boolean.class));
 			story.setAssistant(context.deserialize(jo.get("assistant"), Editor.class));
 			story.setEditor(context.deserialize(jo.get("editor"), Editor.class));
 			story.setSenior(context.deserialize(jo.get("senior"), Editor.class));

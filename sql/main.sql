@@ -62,7 +62,9 @@ create table stories (
 	request varchar,
 	response varchar,
 	receiver_name varchar(41),
-	requestor_name varchar(41)
+	requestor_name varchar(41),
+	draft varchar,
+	modified bool
 );
 
 create table genre_editor_join (
@@ -84,6 +86,8 @@ alter table stories add column request varchar;
 alter table stories add column response varchar;
 alter table stories add column receiver_name varchar(41);
 alter table stories add column requestor_name varchar(41);
+alter table stories add column draft varchar;
+alter table stories add column modified bool;
 
 alter table editors add column senior bool;
 alter table editors add column assistant bool;
@@ -91,6 +95,9 @@ alter table editors add column assistant bool;
 update stories set submission_date = '2021-06-18';
 update stories set submission_date = '2021-06-04' where id = 3;
 update stories set assistant = null, editor = null;
+update stories set requestor_name = 'Hisham Haqq' where id = 3;
+
+update stories set modified = true where id = 3;
 
 delete from stories where id = 5;
 

@@ -68,9 +68,17 @@ function submitForm() {
         genre: document.getElementById("genre_select").value,
         type: document.getElementById("story_type_select").value,
         description: document.getElementById("description").value,
-        tagline: document.getElementById("tagline").value,
-        date: document.getElementById("date").value
+        tagLine: document.getElementById("tagline").value,
+        completionDate: document.getElementById("date").value,
+        submissionDate: null
     }
+
+    let today = new Date();
+    let dd = String(today.getDate()).padStart(2, '0');
+    let mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0
+    let yyyy = today.getFullYear();
+    today = yyyy + "-" + mm + "-" + dd;
+    story_form.submissionDate = today;
 
     let json = JSON.stringify(story_form);
     let xhttp = new XMLHttpRequest();
@@ -81,7 +89,7 @@ function submitForm() {
         if (xhttp.readyState == 4) {
             if (xhttp.status == 200) {
                 console.log("Received response from form submission!");
-                // window.location.href = xhttp.responseText;
+                window.location.href = "author_main.html";
             }
         }
     }

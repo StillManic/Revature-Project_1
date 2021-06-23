@@ -1,4 +1,5 @@
 let url = "http://localhost:8080/Project_1/controller";
+let logged_in;
 
 function fillRequests() {
     console.log("filling requests table");
@@ -12,14 +13,17 @@ function fillRequests() {
     xhttp.onreadystatechange = () => {
         if (xhttp.readyState == 4) {
             if (xhttp.status == 200) {
-                let rt = xhttp.responseText;
-                let json = JSON.parse(rt);
+                // let rt = xhttp.responseText;
+                // let json = JSON.parse(rt);
+                let strs = xhttp.responseText.split("|");
+                logged_in = strs[0];
+                let stories = JSON.parse(strs[1]);
 
-                console.log(json);
+                // console.log(json);
 
                 let table = document.getElementById("requests");
-                // for (let story of stories) {
-                for (let story of json) {
+                for (let story of stories) {
+                // for (let story of json) {
                     let tr = document.createElement("tr");
                     
                     // Author
@@ -91,7 +95,9 @@ function populateInfoRequest() {
     xhttp.onreadystatechange = () => {
         if (xhttp.readyState == 4) {
             if (xhttp.status = 200) {
-                let story = JSON.parse(xhttp.responseText);
+                let strs = xhttp.responseText.split("|");
+                logged_in = strs[0];
+                let story = JSON.parse(strs[1]);
 
                 let ir_title = document.getElementById("ir_title");
                 let ir_requestor = document.getElementById("ir_requestor");
@@ -126,14 +132,18 @@ function sendResponse(story) {
     xhttp.onreadystatechange = () => {
         if (xhttp.readyState == 4) {
             if (xhttp.status == 200) {
-
+                
             }
         }
     }
 }
 
 function listBack() {
-    window.location.href = "editor_main.html";
+    if (logged_in == "editor") {
+        window.location.href = "editor_main.html";
+    } else if (logged_in == "author") {
+        window.location.href = "author_main.html";
+    }
 }
 
 function sfBack() {

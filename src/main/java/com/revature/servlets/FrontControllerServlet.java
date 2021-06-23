@@ -60,7 +60,7 @@ public class FrontControllerServlet extends HttpServlet {
 		
 		String uri = request.getRequestURI();
 		System.out.println(uri);
-		String json;
+		String json = "";
 		
 		response.setHeader("Access-Control-Allow-Origin", "*");		// Needed to avoid CORS violations
 		response.setHeader("Content-Type", "application/json");		// Needed to enable json data to be passed between front and back end
@@ -105,12 +105,22 @@ public class FrontControllerServlet extends HttpServlet {
 				if (a != null) {
 					System.out.println("Author " + a.getFirstName() + " has logged in!");
 					session.setAttribute("logged_in", a);
-					response.getWriter().append("story_proposal_form.html");
+//					response.getWriter().append("story_proposal_form.html");
+					response.getWriter().append("author_main.html");
 				} else {
 					System.out.println("Failed to login with credentials: username=" + info.username + " password=" + info.password);
 				}
 				break;
 			}
+//			case "get_logged_in_flag": {
+//				Object logged_in = session.getAttribute("logged_in");
+//				if (logged_in instanceof Author) {
+//					response.getWriter().append(this.gson.toJson("author"));
+//				} else if (logged_in instanceof Editor) {
+//					response.getWriter().append(this.gson.toJson("editor"));
+//				}
+//				break;
+//			}
 			case "logout": {
 				String pageURL = "";
 				Object loggedIn = session.getAttribute("logged_in");
@@ -133,46 +143,58 @@ public class FrontControllerServlet extends HttpServlet {
 			case "submit_story_form": {
 				Story story = this.gson.fromJson(request.getReader(), Story.class);
 				Author a = (Author) session.getAttribute("logged_in");
-				story.setApprovalStatus("submitted");
+				if (a.getPoints() < story.getType().getPoints()) {
+					story.setApprovalStatus("waiting");
+				} else {
+					story.setApprovalStatus("submitted");
+					a.setPoints(a.getPoints() - story.getType().getPoints());
+					new AuthorRepo().update(a);
+				}
 				story.setAuthor(a);
+				story.setModified(false);
 				story = new StoryRepo().add(story);
 				System.out.println(story);
 				break;
 			}
-			case "get_author_proposals": {
-				Author a = (Author) session.getAttribute("logged_in");
-				List<Story> stories = new StoryRepo().getAllByAuthor(a.getId());
-				json = this.gson.toJson(stories);
-				response.getWriter().append(json);
-			}
-			case "get_editor_proposals": {
-				Editor e = (Editor) session.getAttribute("logged_in");
-				Set<Genre> genres = Utils.getGenres(e);
-				List<Story> stories = new ArrayList<Story>();
-				
-				for (Genre g : genres) {
-					if (e.getSenior()) {
-						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "approved_editor"));
-					} else if (e.getAssistant()) {
-						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "submitted"));
-					} else {
-						String status = "approved_assistant";
-						if (g.getName().equals("Sci-fi")) {
-							Genre fantasy = new GenreRepo().getByName("Fantasy");
-							stories.addAll(new StoryRepo().getAllByGenreAndStatus(fantasy, status));
-						} else if (g.getName().equals("Fantasy")) {
-							Genre horror = new GenreRepo().getByName("Horror");
-							stories.addAll(new StoryRepo().getAllByGenreAndStatus(horror, status));
-						} else if (g.getName().equals("Horror")) {
-							Genre scifi = new GenreRepo().getByName("Sci-fi");
-							stories.addAll(new StoryRepo().getAllByGenreAndStatus(scifi, status));
+			case "get_proposals": {
+				Object logged_in = session.getAttribute("logged_in");
+				if (logged_in instanceof Author) {
+					Author a = (Author) logged_in;
+					List<Story> stories = new StoryRepo().getAllByAuthor(a.getId());
+					json = "author|" + this.gson.toJson(stories);
+					response.getWriter().append(json);
+				} else if (logged_in instanceof Editor) {
+					Editor e = (Editor) session.getAttribute("logged_in");
+					Set<Genre> genres = Utils.getGenres(e);
+					List<Story> stories = new ArrayList<Story>();
+					
+					for (Genre g : genres) {
+						if (e.getSenior()) {
+							stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "approved_editor"));
+						} else if (e.getAssistant()) {
+							stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "submitted"));
+						} else {
+							String status = "approved_assistant";
+							if (g.getName().equals("Sci-fi")) {
+								Genre fantasy = new GenreRepo().getByName("Fantasy");
+								stories.addAll(new StoryRepo().getAllByGenreAndStatus(fantasy, status));
+							} else if (g.getName().equals("Fantasy")) {
+								Genre horror = new GenreRepo().getByName("Horror");
+								stories.addAll(new StoryRepo().getAllByGenreAndStatus(horror, status));
+							} else if (g.getName().equals("Horror")) {
+								Genre scifi = new GenreRepo().getByName("Sci-fi");
+								stories.addAll(new StoryRepo().getAllByGenreAndStatus(scifi, status));
+							}
 						}
 					}
+					
+					String flag = "general|";
+					if (e.getAssistant()) flag = "assistant|";
+					else if (e.getSenior()) flag = "senior|";
+					json = flag + this.gson.toJson(stories);
+					
+					response.getWriter().append(json);
 				}
-				
-				json = this.gson.toJson(stories);
-				
-				response.getWriter().append(json);
 				break;
 			}
 			case "save_story_to_session": {
@@ -183,8 +205,14 @@ public class FrontControllerServlet extends HttpServlet {
 			}
 			case "get_story_from_session": {
 				JsonObject sj = (JsonObject) session.getAttribute("story");
-				System.out.println(sj);
-				response.getWriter().append(sj.toString());
+				String str = "";
+				Object logged_in = session.getAttribute("logged_in");
+				if (logged_in instanceof Author) {
+					str = "author|";
+				} else {
+					str = "editor|";
+				}
+				response.getWriter().append(str + sj.toString());
 				break;
 			}
 			case "approve_story": {
@@ -214,9 +242,14 @@ public class FrontControllerServlet extends HttpServlet {
 				break;
 			}
 			case "deny_story": {
+				Object logged_in = session.getAttribute("logged_in");
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
-				System.out.println(s);
-				new StoryRepo().update(s);
+				if (logged_in instanceof Author && s.getModified()) {
+					new StoryRepo().delete(s);
+					Author a = (Author) logged_in;
+					a.setPoints(a.getPoints() + s.getType().getPoints());
+				}
+				else new StoryRepo().update(s);
 				break;
 			}
 			case "request_info": {
@@ -243,7 +276,13 @@ public class FrontControllerServlet extends HttpServlet {
 				}
 				
 				List<Story> stories = new StoryRepo().getAllByReceiverName(receiverName[0], receiverName[1]);
-				response.getWriter().append(this.gson.toJson(stories));
+				if (logged_in instanceof Author) {
+					json = "author|" + this.gson.toJson(stories);
+				} else if (logged_in instanceof Editor) {
+					//TODO: change this!!!
+					json = "editor|" + this.gson.toJson(stories);
+				}
+				response.getWriter().append(json);
 				break;
 			}
 			case "save_response": {
@@ -286,14 +325,33 @@ public class FrontControllerServlet extends HttpServlet {
 				counts[2] = "" + infoReqs.size();
 				counts[3] = "" + 0;		// # drafts
 				
-				response.getWriter().append(gson.toJson(counts));
+				response.getWriter().append(this.gson.toJson(counts));
 				
 				break;
 			}
+			case "get_author_main_labels": {
+				String[] counts = new String[4];
+				Author a = (Author) session.getAttribute("logged_in");
+				if (a == null) System.out.println("get_author_main_labels: author null!!!!");
+				List<Story> stories = new StoryRepo().getAllByAuthor(a.getId());
+				List<Story> infoReqs = new StoryRepo().getAllByReceiverName(a.getFirstName(), a.getLastName());
+				counts[0] = a.getFirstName() + " " + a.getLastName();
+				counts[1] = "" + stories.size();
+				counts[2] = "" + infoReqs.size();
+				counts[3] = "";
+				
+				response.getWriter().append(this.gson.toJson(counts));
+				break;
+			}
 			case "update_details": {
-				Story s = gson.fromJson(request.getReader(), Story.class);
+				Story s = this.gson.fromJson(request.getReader(), Story.class);
 				new StoryRepo().update(s);
 				// notify author somehow
+				break;
+			}
+			case "submit_draft": {
+				Story s = this.gson.fromJson(request.getReader(), Story.class);
+				new StoryRepo().update(s);
 				break;
 			}
 			default: break;

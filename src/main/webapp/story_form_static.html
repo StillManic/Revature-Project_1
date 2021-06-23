@@ -52,12 +52,24 @@
             </div>
         </div>
 
+        <!-- Submit Draft Modal -->
+        <div id="modal_draft" class="modal">
+            <div class="modal-content">
+                <input type="button" name="close_draft_modal" value="X" id="close_draft_modal" onclick="closeDraftModal()">
+                <h3 id="draft_title" class="green">-Title-</h3>
+                <label for="draft_box">Please submit the final draft for this story:</label>
+                <textarea name="draft_box" id="draft_box" cols="30" rows="10"></textarea>
+                <input type="button" name="submit_draft_button" value="Submit Draft" id="submit_draft_button">
+            </div>
+        </div>
+
         <div id="main_div" class="container">
             <input type="button" name="update" value="Update" id="update_button" style="display: none">
             <input type="button" name="approve" value="Approve" id="approve_button">
             <input type="button" name="deny" value="Deny" id="deny_button">
             <input type="button" name="res_info" value="View Response" id="response_button" style="display: none">
             <input type="button" name="req_info" value="Request More Information" id="info_button">
+            <input type="button" name="submit_draft" value="Submit Draft" id="draft_button" style="display:none">
             <input type="button" name="back" value="Back" onclick="sfBack()">
 
             <br><br>

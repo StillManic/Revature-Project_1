@@ -63,7 +63,8 @@ public class Author {
 	}
 
 	public void setPoints(Integer points) {
-		this.points = points;
+		if (points > 100) this.points = 100;
+		else this.points = points;
 	}
 
 	public String getUsername() {
