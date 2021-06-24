@@ -18,12 +18,10 @@
 			<form action="submit">
 				<div class="container">
 					<div class="row">
-						<p class="green h4">Author</p>
-						<p id="author_name">-name-</p>
-						<p class="green h4">Biography</p>
-						<p id="author_bio">
-							<!-- Filled by fillDropdowns() -->
-						</p>
+						<h4 class="green">Author</h4>
+						<h5 id="author_name" class="purple light-grey-background">-</h5>
+						<h4 class="green">Biography</h4>
+						<h5 id="author_bio" class="purple light-grey-background">-</h5>
 					</div>
 		
 					<div class="row">
@@ -35,22 +33,28 @@
 						<label for="date" class="green h4">Tentative Completion Date</label>
 						<input type="date" name="date" id="date">
 					</div>
+
+					<br>
 		
 					<!-- TODO: switch this to a Bootstrap dropdown using ul and li? -->
 					<div class="row">
-						<label for="story_type_select" class="col-md-2">Story Type</label>
+						<label for="story_type_select" class="col-md-2 h5">Story Type</label>
 						<select name="story_type_select" id="story_type_select" class="col-md-2">
 							<!-- Filled by javascript "fillDropdowns()" -->
 						</select>
-						<p id="point_counter" class="col-md-2"></p>
-						<p id="points_available"></p>
-					</div>
-		
-					<div class="row">
-						<label for="genre_select">Genre</label>
-						<select name="genre_select" id="genre_select">
+						<p id="point_counter" class="col-md-2 h5"></p>
+						<p id="points_available" class="col-md-2 h5"></p>
+
+						<label for="genre_select" class="green h4 col-md-2">Genre</label>
+						<select name="genre_select" id="genre_select" class="col-md-2">
 							<!-- Filled by javascript "fillDropdowns()" -->
 						</select>
+					</div>
+		
+					<br>
+
+					<div class="row">
+						<p id="points_available_notice" class="purple h5">-</p>
 					</div>
 		
 					<div class="row">

@@ -15,8 +15,8 @@ import com.revature.models.Editor;
 import com.revature.models.Genre;
 import com.revature.models.Story;
 import com.revature.models.StoryType;
+import com.revature.services.GEJoinServices;
 import com.revature.utils.JDBCConnection;
-import com.revature.utils.Utils;
 
 public class StoryRepo implements GenericRepo<Story> {
 	private Connection conn = JDBCConnection.getConnection();
@@ -85,16 +85,15 @@ public class StoryRepo implements GenericRepo<Story> {
 			ps.setString(1, name);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				// TODO: move this check to Services
 				Story s = this.make(rs);
 				if (s.getResponse() == null || s.getResponse().equals("")) list.add(s);
-//				list.add(this.make(rs));
 			}
 			
 			return list;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
 		return null;
 	}
 	
@@ -155,12 +154,32 @@ public class StoryRepo implements GenericRepo<Story> {
 		return null;
 	}
 	
-	public List<Story> getAllByGenreAndStatus(Genre g, String status) {
+	public List<Story> getAllByAuthorAndStatus(Integer author, String status) {
+		String sql = "select * from stories where author = ? and approval_status = ?;";
+		try {
+			List<Story> list = new ArrayList<Story>();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, author);
+			ps.setString(2, status);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				list.add(this.make(rs));
+			}
+			
+			return list;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public List<Story> getAllByGenreAndStatus(Integer genre, String status) {
 		String sql = "select * from stories where genre = ? and approval_status = ?;";
 		try {
 			List<Story> list = new ArrayList<Story>();
 			PreparedStatement ps = conn.prepareStatement(sql);
-			ps.setInt(1, g.getId());
+			ps.setInt(1, genre);
 			ps.setString(2, status);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
@@ -194,16 +213,16 @@ public class StoryRepo implements GenericRepo<Story> {
 	}
 	
 	public List<Story> getAllWithDraftsForEditor(Editor e) {
-		Set<Genre> genres = Utils.getGenres(e);
+		Set<Genre> genres = GEJoinServices.getGenres(e);
 		List<Story> list = new ArrayList<Story>();
 		String sql;
 		
 		if (e.getSenior()) {
-			sql = "select * from stories where genre = ? and draft notnull;";
+			sql = "select * from stories where genre = ? and approval_status = 'approved_senior' and draft notnull;";
 		} else if (e.getAssistant()) {
-			sql = "select * from stories where genre = ? and story_type in (1, 2) and draft notnull;";
+			sql = "select * from stories where genre = ? and approval_status = 'approved_senior' and story_type in (1, 2) and draft notnull;";
 		} else {
-			sql = "select * from stories where genre = ? and story_type in (1, 2, 3) and draft notnull";
+			sql = "select * from stories where genre = ? and  approval_status = 'approved_senior' and story_type in (1, 2, 3) and draft notnull";
 		}
 		
 		for (Genre g : genres) {
@@ -220,7 +239,7 @@ public class StoryRepo implements GenericRepo<Story> {
 		}
 		
 		if (!e.getSenior() && !e.getAssistant()) {
-			sql = "select * from stories where editor = ? and draft notnull;";
+			sql = "select * from stories where editor = ? and approval_status = 'approved_senior' and draft notnull;";
 			try {
 				PreparedStatement ps = conn.prepareStatement(sql);
 				ps.setInt(1, e.getId());
@@ -236,28 +255,6 @@ public class StoryRepo implements GenericRepo<Story> {
 		
 		return list;
 	}
-		
-//		String sql = "select * from stories where";
-//		if (e.getSenior()) {
-//			sql += " senior = ?;";
-//		} else if (e.getAssistant() && t.getName().equals(t)) {
-//			sql += " assistant = ?;";
-//		} else {
-//			sql += " editor = ?;";
-//		}
-//		try {
-//			List<Story> list = new ArrayList<Story>();
-//			PreparedStatement ps = conn.prepareStatement(sql);
-//			ps.setInt(1, e.getId());
-//			ResultSet rs = ps.executeQuery();
-//			while (rs.next()) {
-//				list.add(this.make(rs));
-//			}
-//			
-//			return list;
-//		} catch (SQLException e1) {
-//			e1.printStackTrace();
-//		}
 
 	@Override
 	public Map<Integer, Story> getAll() {

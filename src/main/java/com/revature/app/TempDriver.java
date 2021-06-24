@@ -14,7 +14,7 @@ import com.revature.repositories.GEJoinRepo;
 import com.revature.repositories.GenreRepo;
 import com.revature.repositories.StoryRepo;
 import com.revature.repositories.StoryTypeRepo;
-import com.revature.utils.Utils;
+import com.revature.services.GEJoinServices;
 
 public class TempDriver {
 	private static AuthorRepo ar = new AuthorRepo();
@@ -43,20 +43,20 @@ public class TempDriver {
 		Genre fantasy = gr.add(new Genre("Fantasy"));
 		Genre horror = gr.add(new Genre("Horror"));
 		
-		Utils.addEntry(scifi, hisham, true, false);
-		Utils.addEntry(scifi, emmett, false, false);
-		Utils.addEntry(scifi, erika, false, false);
-		Utils.addEntry(scifi, bennett, false, true);
+		GEJoinServices.addEntry(scifi, hisham, true, false);
+		GEJoinServices.addEntry(scifi, emmett, false, false);
+		GEJoinServices.addEntry(scifi, erika, false, false);
+		GEJoinServices.addEntry(scifi, bennett, false, true);
 		
-		Utils.addEntry(fantasy, emmett, true, false);
-		Utils.addEntry(fantasy, erika, false, false);
-		Utils.addEntry(fantasy, bennett, false, false);
-		Utils.addEntry(fantasy, sydney, false, true);
+		GEJoinServices.addEntry(fantasy, emmett, true, false);
+		GEJoinServices.addEntry(fantasy, erika, false, false);
+		GEJoinServices.addEntry(fantasy, bennett, false, false);
+		GEJoinServices.addEntry(fantasy, sydney, false, true);
 		
-		Utils.addEntry(horror, erika, true, false);
-		Utils.addEntry(horror, bennett, false, false);
-		Utils.addEntry(horror, sydney, false, false);
-		Utils.addEntry(horror, jason, false, true);
+		GEJoinServices.addEntry(horror, erika, true, false);
+		GEJoinServices.addEntry(horror, bennett, false, false);
+		GEJoinServices.addEntry(horror, sydney, false, false);
+		GEJoinServices.addEntry(horror, jason, false, true);
 		
 		Story story = new Story();
 		story.setTitle("Story Title");
@@ -70,7 +70,7 @@ public class TempDriver {
 		story.setReason("");
 		sr.add(story);
 		
-		Utils.loadEntries();
+		GEJoinServices.loadEntries();
 		GEJoin join = (new GEJoinRepo()).getById(5);
 		System.out.println(join);
 	}

@@ -52,7 +52,7 @@ function fillTable() {
                     // Approval Status
                     td = document.createElement("td");
                     td.setAttribute("class", "green purple-background");
-                    td.innerHTML = story.approvalStatus;
+                    td.innerHTML = getPrettyStatus(story.approvalStatus);
                     td.onclick = () => {
                         handleRowClick(story);
                     }
@@ -63,6 +63,15 @@ function fillTable() {
             }
         }
     }
+}
+
+function getPrettyStatus(status) {
+    if (status == "waiting") { return "Waiting for Points"; }
+    if (status == "submitted") { return "Submitted"; }
+    if (status == "approved_assistant") { return "Approved by Assistant"; }
+    if (status == "approved_editor") { return "Approved by General"; }
+    if (status == "approved_senior") { return "Waiting for Draft"; }
+    if (status == "Approved") { return "Draft Approved"; }
 }
 
 function handleRowClick(story) {
@@ -82,7 +91,7 @@ function handleRowClick(story) {
     draft.innerHTML = story.draft;
 
     console.log(story.approvalStatus);
-    
+
     let approveBtn = document.getElementById("approve_button");
     // let denyBtn = document.getElementById("deny_button");
     let changeBtn = document.getElementById("change_button");
@@ -98,7 +107,21 @@ function handleRowClick(story) {
     changeBtn.onclick = () => {
         story.draft = draft.value;
         story.modified = true;
-        change(story);
+
+        let label = document.getElementById("df_request_label");
+        let box = document.getElementById("df_request");
+        let btn = document.getElementById("df_submit_request");
+
+        label.style.display = "inline";
+        box.style.display = "inline";
+        btn.style.display = "inline";
+
+        btn.onclick = () => {
+            story.request = box.value;
+            change(story);
+        }
+        
+        // change(story);
     }
 }
 
@@ -151,6 +174,7 @@ function change(story) {
     let flag = "/request_draft_change";
 
     let json = JSON.stringify(story);
+    console.log("Changing Story!!! " + json);
 
     let xhttp = new XMLHttpRequest();
     xhttp.open("POST", url + flag, true);

@@ -55,6 +55,11 @@ function fillDropdowns() {
                 author_name.innerHTML = author.firstName + " " + author.lastName;
                 author_bio.innerHTML = author.bio;
                 author_points.innerHTML = "Available Points: " + author.points;
+                if (author.points < stj[0].points) {
+                    console.log("appending the thing!!!")
+                    let author_points_notice = document.getElementById("points_available_notice");
+                    author_points_notice.innerHTML = " ** This proposal will be saved for future submission! **";
+                }
             }
         }
     }

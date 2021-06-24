@@ -46,8 +46,8 @@ function fillProposals() {
                     
                     // Author
                     let td = document.createElement("td");
-                    
-                    if (overdue && !author) {
+                    // if (story.modified && story.request != null) 
+                    if ((overdue && !author) || (author && story.modified && story.request != null)) {
                         td.setAttribute("class", "green red-background");
                     } else {
                         td.setAttribute("class", "green purple-background");
@@ -71,7 +71,7 @@ function fillProposals() {
 
                     // Title
                     td = document.createElement("td");
-                    if (overdue && !author) {
+                    if ((overdue && !author) || (author && story.modified && story.request != null)) {
                         td.setAttribute("class", "green red-background");
                     } else {
                         td.setAttribute("class", "green purple-background");
@@ -88,7 +88,7 @@ function fillProposals() {
 
                     // Story Name
                     td = document.createElement("td");
-                    if (overdue && !author) {
+                    if ((overdue && !author) || (author && story.modified && story.request != null)) {
                         td.setAttribute("class", "green red-background");
                     } else {
                         td.setAttribute("class", "green purple-background");
@@ -105,12 +105,12 @@ function fillProposals() {
 
                     // Approval Status
                     td = document.createElement("td");
-                    if (overdue && !author) {
+                    if ((overdue && !author) || (author && story.modified && story.request != null)) {
                         td.setAttribute("class", "green red-background");
                     } else {
                         td.setAttribute("class", "green purple-background");
                     }
-                    td.innerHTML = story.approvalStatus;
+                    td.innerHTML = getPrettyStatus(story.approvalStatus);
 
                     if ((author || senior) || ((overdue == lock) && (assistant || general))) {
                         td.onclick = () => {
@@ -125,6 +125,15 @@ function fillProposals() {
             }
         }
     }
+}
+
+function getPrettyStatus(status) {
+    if (status == "waiting") { return "Waiting for Points"; }
+    if (status == "submitted") { return "Submitted"; }
+    if (status == "approved_assistant") { return "Approved by Assistant"; }
+    if (status == "approved_editor") { return "Approved by General"; }
+    if (status == "approved_senior") { return "Waiting for Draft"; }
+    if (status == "Approved") { return "Approved"; }
 }
 
 /*
@@ -227,10 +236,82 @@ function populateStaticForm() {
         let sf_completion_date = document.getElementById("sf_completion_date");
         let sf_status = document.getElementById("sf_status");
 
-        console.log(story.draft);
+        let approveBtn = document.getElementById("approve_button");
+        let denyBtn = document.getElementById("deny_button");
+        let infoBtn = document.getElementById("info_button");
+        let draftBtn = document.getElementById("draft_button");
+
+        if (logged_in == "author") {
+            infoBtn.style.display = "none";
+
+            if (story.approvalStatus == "approved_senior") {
+                draftBtn.style.display = "inline";
+
+                let modal_draft = document.getElementById("modal_draft");
+                draftBtn.onclick = () => {
+                    modal_draft.style.display = "block";
+                }
+
+                let draft_title = document.getElementById("draft_title");
+                draft_title.innerHTML = story.title;
+
+                let submit_draft_button = document.getElementById("submit_draft_button");
+                submit_draft_button.onclick = () => {
+                    modal_draft.style.display = "none";
+                    let draft_box = document.getElementById("draft_box");
+                    story.draft = draft_box.value;
+                    let sf_draft = document.getElementById("sf_draft");
+                    sf_draft.innerHTML = story.draft;
+                    sf_draft.style.display = "block";
+                    console.log("Submitting draft: " + draft_box.value);
+                    submitDraft(story);
+                }
+
+                if (!story.modified) {
+                    approveBtn.style.display = "none";
+                    denyBtn.style.display = "none";
+                }
+            }
+        }
+
+        approveBtn.onclick = () => {
+            approve(story);
+        }
+
         if (story.approvalStatus == "approved_senior") {
             let sf_draft_label = document.getElementById("sf_draft_label");
             let sf_draft = document.getElementById("sf_draft");
+            
+            console.log("about to swap box: " + story.draft)
+            /* 
+             * Allow Author to modify draft if changes have been requested
+             */
+            if (story.modified && story.request != null) {
+                sf_draft_label.style.display = "block";
+                let sf_draft_modifiable = document.createElement("textarea")
+                sf_draft_modifiable.setAttribute("class", "purple light-grey-background");
+                sf_draft_modifiable.setAttribute("name", "sf_draft_modifiable");
+                sf_draft_modifiable.setAttribute("id", "sf_draft_modifiable");
+                sf_draft_modifiable.setAttribute("cols", "30");
+                sf_draft_modifiable.setAttribute("rows", "10");
+                document.getElementById("main_div").replaceChild(sf_draft_modifiable, sf_draft);
+                sf_draft_modifiable.value = story.draft;
+
+                let request_label = document.getElementById("sf_draft_change_request_label");
+                let request = document.getElementById("sf_draft_change_request");
+
+                request_label.style.display = "block";
+                request.style.display = "block";
+
+                request.innerHTML = story.request;
+
+                let update_draft_btn = document.getElementById("update_draft_button");
+                update_draft_btn.style.display = "inline";
+                update_draft_btn.onclick = () => {
+                    story.draft = sf_draft_modifiable.value;
+                    updateDraft(story);
+                }
+            }
 
             sf_draft_label.style.display = "block";
             sf_draft.style.display = "block";
@@ -282,7 +363,7 @@ function populateStaticForm() {
         }
         sf_author_name.innerHTML = story.author.firstName + " " + story.author.lastName;
         sf_author_bio.innerHTML = story.author.bio;
-        sf_author_points.innerHTML = story.author.points + " (" + (story.author.points - story.type.points) + " points if approved)";
+        sf_author_points.innerHTML = story.author.points;
         sf_genre.innerHTML = story.genre.name;
         sf_type.innerHTML = story.type.name + " (" + story.type.points + " points)";
         sf_description.innerHTML = story.description;
@@ -315,41 +396,6 @@ function populateStaticForm() {
         sf_status.setAttribute("class", "purple light-grey-background");
 
 
-
-        let approveBtn = document.getElementById("approve_button");
-        let denyBtn = document.getElementById("deny_button");
-        let infoBtn = document.getElementById("info_button");
-        let draftBtn = document.getElementById("draft_button");
-
-        if (logged_in == "author") {
-            infoBtn.style.display = "none";
-
-            if (story.approvalStatus == "approved_senior") {
-                draftBtn.style.display = "inline";
-
-                let modal_draft = document.getElementById("modal_draft");
-                draftBtn.onclick = () => {
-                    modal_draft.style.display = "block";
-                }
-
-                let draft_title = document.getElementById("draft_title");
-                draft_title.innerHTML = story.title;
-
-                let submit_draft_button = document.getElementById("submit_draft_button");
-                submit_draft_button.onclick = () => {
-                    submitDraft(story);
-                }
-
-                if (!story.modified) {
-                    approveBtn.style.display = "none";
-                    denyBtn.style.display = "none";
-                }
-            }
-        }
-
-        approveBtn.onclick = () => {
-            approve(story);
-        }
 
         /*
                 Approve proposal
@@ -420,26 +466,31 @@ function populateStaticForm() {
 
         /* Fill Persons Dropdown */
         let ps = document.getElementById("person_select");
-        function makeOption(person, selected) {
-            let option = document.createElement("option");
-            if (selected) {
-                option.setAttribute("selected", "selected");
-            }
-            option.setAttribute("value", person.firstName + " " + person.lastName);
-            option.innerHTML = person.firstName + " " + person.lastName;
-            ps.appendChild(option);
+        // Delete children of the ps element to prevent duplicates
+        while (ps.firstChild) {
+            ps.removeChild(ps.firstChild);
         }
 
-        makeOption(story.author, true);
+        makeOption(story.author, true, ps);
 
         if (story.approvalStatus == "approved_assistant") {
-            makeOption(story.assistant, false);
+            makeOption(story.assistant, false, ps);
         }
 
         if (story.approvalStatus == "approved_editor") {
-            makeOption(story.editor, false);
+            makeOption(story.editor, false, ps);
         }
     }
+}
+
+function makeOption(person, selected, ps) {
+    let option = document.createElement("option");
+    if (selected) {
+        option.setAttribute("selected", selected);
+    }
+    option.setAttribute("value", person.firstName + " " + person.lastName);
+    option.innerHTML = person.firstName + " " + person.lastName;
+    ps.appendChild(option);
 }
 
 /*
@@ -568,6 +619,24 @@ function submitDraft(story) {
     story.draft = draft_box.value;
     let json = JSON.stringify(story);
 
+    xhttp.open("POST", url + flag, true);
+    xhttp.send(json);
+
+    xhttp.onreadystatechange = () => {
+        if (xhttp.readyState == 4) {
+            if (xhttp.status == 200) {
+
+            }
+        }
+    }
+}
+
+function updateDraft(story) {
+    let flag = "/update_draft";
+    
+    let json = JSON.stringify(story);
+
+    let xhttp = new XMLHttpRequest();
     xhttp.open("POST", url + flag, true);
     xhttp.send(json);
 

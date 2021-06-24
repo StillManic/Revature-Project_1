@@ -21,12 +21,15 @@ import com.revature.models.Editor;
 import com.revature.models.Genre;
 import com.revature.models.Story;
 import com.revature.models.StoryType;
-import com.revature.repositories.AuthorRepo;
-import com.revature.repositories.EditorRepo;
 import com.revature.repositories.GenreRepo;
 import com.revature.repositories.StoryRepo;
 import com.revature.repositories.StoryTypeRepo;
-import com.revature.utils.Utils;
+import com.revature.services.AuthorServices;
+import com.revature.services.EditorServices;
+import com.revature.services.GEJoinServices;
+import com.revature.services.GenreServices;
+import com.revature.services.StoryServices;
+import com.revature.services.StoryTypeServices;
 
 public class FrontControllerServlet extends HttpServlet {
 	class LoginInfo {
@@ -34,17 +37,8 @@ public class FrontControllerServlet extends HttpServlet {
 		public String password;
 	}
 	
-//	class StoryInfo {
-//		public String title;
-//		public String genre;
-//		public String type;
-//		public String description;
-//		public String tagline;
-//		public Date date;
-//	}
-	
 	public FrontControllerServlet() {
-		Utils.loadEntries();
+		GEJoinServices.loadEntries();
 	}
 	
 	private Gson gson = new Gson();
@@ -54,7 +48,6 @@ public class FrontControllerServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.registerTypeAdapter(Story.class, new Story.Deserializer());
-//		gsonBuilder.registerTypeAdapter(Author.class, new Author.Deserializer());
 		gsonBuilder.setDateFormat("yyyy-MM-dd");
 		this.gson = gsonBuilder.create();
 		
@@ -73,40 +66,37 @@ public class FrontControllerServlet extends HttpServlet {
 				System.out.println("Received author sign up!");
 				Author a = this.gson.fromJson(request.getReader(), Author.class);
 				if (a != null) {
-					a = new AuthorRepo().add(a);
+					a = AuthorServices.getInstance().addAuthor(a);
 					System.out.println("Created new Author " + a + " and logged in!");
 					session.setAttribute("logged_in", a);
-					// TODO: change this to "author_main.html" when it exits!!!
-					response.getWriter().append("story_proposal_form.html");
+					response.getWriter().append("author_main.html");
 				} else {
 					System.out.println("Failed to create new Author account!");
 				}
 				break;
 			}
 			// TODO: can editor login and author login be combined into the same thing? would require that login info across the two tables be unique
-			case "editor_login": {
-				System.out.println("Recieved editor_login!");
+			case "author_login": {
+				System.out.println("Received author_login!");
 				LoginInfo info = this.gson.fromJson(request.getReader(), LoginInfo.class);
-				Editor e = new EditorRepo().getByUsernameAndPassword(info.username, info.password);
-				if (e != null) {
-					System.out.println("Editor " + e.getFirstName() + " has logged in!");
-					session.setAttribute("logged_in", e);
-					response.getWriter().append("editor_main.html");
-//					response.getWriter().append("editor_story_list.html");
+				Author a = AuthorServices.getInstance().getByUsernameAndPassword(info.username, info.password);
+				if (a != null) {
+					System.out.println("Author " + a.getFirstName() + " has logged in!");
+					session.setAttribute("logged_in", a);
+					response.getWriter().append("author_main.html");
 				} else {
 					System.out.println("Failed to login with credentials: username=" + info.username + " password=" + info.password);
 				}
 				break;
 			}
-			case "author_login": {
-				System.out.println("Received author_login!");
+			case "editor_login": {
+				System.out.println("Recieved editor_login!");
 				LoginInfo info = this.gson.fromJson(request.getReader(), LoginInfo.class);
-				Author a = new AuthorRepo().getByUsernameAndPassword(info.username, info.password);
-				if (a != null) {
-					System.out.println("Author " + a.getFirstName() + " has logged in!");
-					session.setAttribute("logged_in", a);
-//					response.getWriter().append("story_proposal_form.html");
-					response.getWriter().append("author_main.html");
+				Editor e = EditorServices.getInstance().getByUsernameAndPassword(info.username, info.password);
+				if (e != null) {
+					System.out.println("Editor " + e.getFirstName() + " has logged in!");
+					session.setAttribute("logged_in", e);
+					response.getWriter().append("editor_main.html");
 				} else {
 					System.out.println("Failed to login with credentials: username=" + info.username + " password=" + info.password);
 				}
@@ -123,11 +113,11 @@ public class FrontControllerServlet extends HttpServlet {
 				break;
 			}
 			case "get_story_types": {
-				List<StoryType> types = new ArrayList<StoryType>(new StoryTypeRepo().getAll().values());
-				List<Genre> genres = new ArrayList<Genre>(new GenreRepo().getAll().values());
+				List<StoryType> types = StoryTypeServices.getInstance().getAllList();
+				List<Genre> genres = GenreServices.getInstance().getAllList();
 				Author a = (Author) session.getAttribute("logged_in");
 				String[] jsons = new String[] { this.gson.toJson(types), this.gson.toJson(genres), this.gson.toJson(a) };
-				json = gson.toJson(jsons);
+				json = this.gson.toJson(jsons);
 				response.getWriter().append(json);
 				break;
 			}
@@ -138,12 +128,12 @@ public class FrontControllerServlet extends HttpServlet {
 					story.setApprovalStatus("waiting");
 				} else {
 					story.setApprovalStatus("submitted");
-					a.setPoints(a.getPoints() - story.getType().getPoints());
-					new AuthorRepo().update(a);
+					AuthorServices.getInstance().subtractPoints(a, story.getType().getPoints());
 				}
 				story.setAuthor(a);
 				story.setModified(false);
-				story = new StoryRepo().add(story);
+				story.setDraftApprovalCount(0);
+				story = StoryServices.getInstance().addStory(story);
 				System.out.println(story);
 				break;
 			}
@@ -151,31 +141,23 @@ public class FrontControllerServlet extends HttpServlet {
 				Object logged_in = session.getAttribute("logged_in");
 				if (logged_in instanceof Author) {
 					Author a = (Author) logged_in;
-					List<Story> stories = new StoryRepo().getAllByAuthor(a.getId());
+					List<Story> stories = StoryServices.getInstance().getAllByAuthor(a.getId());
 					json = "author|" + this.gson.toJson(stories);
 					response.getWriter().append(json);
 				} else if (logged_in instanceof Editor) {
 					Editor e = (Editor) session.getAttribute("logged_in");
-					Set<Genre> genres = Utils.getGenres(e);
+					Set<Genre> genres = GEJoinServices.getGenres(e);
 					List<Story> stories = new ArrayList<Story>();
 					
 					for (Genre g : genres) {
 						if (e.getSenior()) {
-							stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "approved_editor"));
+							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(g.getId(), "approved_editor"));
 						} else if (e.getAssistant()) {
-							stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "submitted"));
+							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(g.getId(), "submitted"));
 						} else {
 							String status = "approved_assistant";
-							if (g.getName().equals("Sci-fi")) {
-								Genre fantasy = new GenreRepo().getByName("Fantasy");
-								stories.addAll(new StoryRepo().getAllByGenreAndStatus(fantasy, status));
-							} else if (g.getName().equals("Fantasy")) {
-								Genre horror = new GenreRepo().getByName("Horror");
-								stories.addAll(new StoryRepo().getAllByGenreAndStatus(horror, status));
-							} else if (g.getName().equals("Horror")) {
-								Genre scifi = new GenreRepo().getByName("Sci-fi");
-								stories.addAll(new StoryRepo().getAllByGenreAndStatus(scifi, status));
-							}
+							Genre other = GenreServices.getInstance().getGenreForGeneralEditor(g);
+							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(other.getId(), status));
 						}
 					}
 					
@@ -209,38 +191,18 @@ public class FrontControllerServlet extends HttpServlet {
 			case "approve_story": {
 				Editor e = (Editor) session.getAttribute("logged_in");
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
-				String status = s.getApprovalStatus();
-				switch (status) {
-					case "submitted":
-						s.setApprovalStatus("approved_assistant");
-						s.setAssistant(e);
-						break;
-					case "approved_assistant":
-						s.setApprovalStatus("approved_editor");
-						s.setEditor(e);
-						break;
-					case "approved_editor":
-						s.setApprovalStatus("approved_senior");
-						s.setSenior(e);
-						break;
-					case "approved_senior":
-						s.setApprovalStatus("draft_approved");
-						break;
-					default: break;
-				}
-				new StoryRepo().update(s);
-				
+				StoryServices.getInstance().incrementApprovalStatus(s, e);
 				break;
 			}
 			case "deny_story": {
 				Object logged_in = session.getAttribute("logged_in");
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
 				if (logged_in instanceof Author && s.getModified()) {
-					new StoryRepo().delete(s);
+					StoryServices.getInstance().deleteStory(s);
 					Author a = (Author) logged_in;
-					a.setPoints(a.getPoints() + s.getType().getPoints());
-				}
-				else new StoryRepo().update(s);
+					AuthorServices.getInstance().addPoints(a, s.getType().getPoints());
+					StoryServices.getInstance().submitNextWaitingProposal(a);
+				} else StoryServices.getInstance().updateStory(s);
 				break;
 			}
 			case "request_info": {
@@ -248,7 +210,7 @@ public class FrontControllerServlet extends HttpServlet {
 				Story s = this.gson.fromJson(strs[0], Story.class);
 				String receiverName = this.gson.fromJson(strs[1], String.class);
 				s.setReceiverName(receiverName);
-				new StoryRepo().update(s);
+				StoryServices.getInstance().updateStory(s);
 				System.out.println("Requesting info!!! " + s);
 				break;
 			}
@@ -266,7 +228,7 @@ public class FrontControllerServlet extends HttpServlet {
 					receiverName[1] = a.getLastName();
 				}
 				
-				List<Story> stories = new StoryRepo().getAllByReceiverName(receiverName[0], receiverName[1]);
+				List<Story> stories = StoryServices.getInstance().getAllByReceiverName(receiverName[0], receiverName[1]);
 				if (logged_in instanceof Author) {
 					json = "author|" + this.gson.toJson(stories);
 				} else if (logged_in instanceof Editor) {
@@ -277,16 +239,14 @@ public class FrontControllerServlet extends HttpServlet {
 			}
 			case "get_draft_requests": {
 				Editor e = (Editor) session.getAttribute("logged_in");
-				
-//				List<Story> stories = new StoryRepo().getAllWithDrafts();
-				List<Story> stories = new StoryRepo().getAllWithDraftsForEditor(e);
+				List<Story> stories = StoryServices.getInstance().getAllWithDraftsForEditor(e);
 				json = this.gson.toJson(stories);
 				response.getWriter().append(json);
 				break;
 			}
 			case "save_response": {
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
-				new StoryRepo().update(s);
+				StoryServices.getInstance().updateStory(s);
 				break;
 			}
 			case "get_editor_main_labels": {
@@ -294,31 +254,31 @@ public class FrontControllerServlet extends HttpServlet {
 				
 				Editor e = (Editor) session.getAttribute("logged_in");
 				if (e == null) System.out.println("get_editor_main_labels: editor null!!!!");
-				Set<Genre> genres = Utils.getGenres(e);
+				Set<Genre> genres = GEJoinServices.getGenres(e);
 				List<Story> stories = new ArrayList<Story>();
 				
 				for (Genre g : genres) {
 					if (e.getSenior()) {
-						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "approved_editor"));
+						stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(g.getId(), "approved_editor"));
 					} else if (e.getAssistant()) {
-						stories.addAll(new StoryRepo().getAllByGenreAndStatus(g, "submitted"));
+						stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(g.getId(), "submitted"));
 					} else {
 						String status = "approved_assistant";
 						if (g.getName().equals("Sci-fi")) {
-							Genre fantasy = new GenreRepo().getByName("Fantasy");
-							stories.addAll(new StoryRepo().getAllByGenreAndStatus(fantasy, status));
+							Genre fantasy = GenreServices.getInstance().getByName("Fantasy");
+							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(fantasy.getId(), status));
 						} else if (g.getName().equals("Fantasy")) {
-							Genre horror = new GenreRepo().getByName("Horror");
-							stories.addAll(new StoryRepo().getAllByGenreAndStatus(horror, status));
+							Genre horror = GenreServices.getInstance().getByName("Horror");
+							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(horror.getId(), status));
 						} else if (g.getName().equals("Horror")) {
-							Genre scifi = new GenreRepo().getByName("Sci-fi");
-							stories.addAll(new StoryRepo().getAllByGenreAndStatus(scifi, status));
+							Genre scifi = GenreServices.getInstance().getByName("Sci-fi");
+							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(scifi.getId(), status));
 						}
 					}
 				}
 				
-				List<Story> infoReqs = new StoryRepo().getAllByReceiverName(e.getFirstName(), e.getLastName());
-				List<Story> draftReqs = new StoryRepo().getAllWithDraftsForEditor(e);
+				List<Story> infoReqs = StoryServices.getInstance().getAllByReceiverName(e.getFirstName(), e.getLastName());
+				List<Story> draftReqs = StoryServices.getInstance().getAllWithDraftsForEditor(e);
 				
 				counts[0] = e.getFirstName() + " " + e.getLastName();
 				counts[1] = "" + stories.size();
@@ -333,8 +293,8 @@ public class FrontControllerServlet extends HttpServlet {
 				String[] counts = new String[4];
 				Author a = (Author) session.getAttribute("logged_in");
 				if (a == null) System.out.println("get_author_main_labels: author null!!!!");
-				List<Story> stories = new StoryRepo().getAllByAuthor(a.getId());
-				List<Story> infoReqs = new StoryRepo().getAllByReceiverName(a.getFirstName(), a.getLastName());
+				List<Story> stories = StoryServices.getInstance().getAllByAuthor(a.getId());
+				List<Story> infoReqs = StoryServices.getInstance().getAllByReceiverName(a.getFirstName(), a.getLastName());
 				counts[0] = a.getFirstName() + " " + a.getLastName();
 				counts[1] = "" + stories.size();
 				counts[2] = "" + infoReqs.size();
@@ -345,13 +305,21 @@ public class FrontControllerServlet extends HttpServlet {
 			}
 			case "update_details": {
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
-				new StoryRepo().update(s);
+				StoryServices.getInstance().updateStory(s);
 				// notify author somehow
 				break;
 			}
 			case "submit_draft": {
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
-				new StoryRepo().update(s);
+				StoryServices.getInstance().updateStory(s);
+				break;
+			}
+			case "update_draft": {
+				Story s = this.gson.fromJson(request.getReader(), Story.class);
+				System.out.println("Updating draft: " + s.getTitle() + " d: " + s.getDraft());
+				s.setRequest(null);
+				s.setModified(false);
+				StoryServices.getInstance().updateStory(s);
 				break;
 			}
 			case "approve_draft": {
@@ -361,18 +329,17 @@ public class FrontControllerServlet extends HttpServlet {
 				switch (type) {
 					case "Novel":
 					case "Novella": {
-						Set<Editor> editors = Utils.getEditors(s.getGenre());
+						Set<Editor> editors = GEJoinServices.getEditors(s.getGenre());
 						Integer count = s.getDraftApprovalCount();
 						count++;
 						s.setDraftApprovalCount(count);
 						float avg = (float) count / (float) editors.size();
 						if (avg > 0.5f) {
 							s.setApprovalStatus("Approved");
-							Author a = s.getAuthor();
-							a.setPoints(a.getPoints() + s.getType().getPoints());
-							new AuthorRepo().update(a);
+							AuthorServices.getInstance().addPoints(s.getAuthor(), s.getType().getPoints());
+							StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
 						}
-						new StoryRepo().update(s);
+						StoryServices.getInstance().updateStory(s);
 						break;
 					}
 					case "Short Story": {
@@ -382,29 +349,32 @@ public class FrontControllerServlet extends HttpServlet {
 						s.setDraftApprovalCount(count);
 						if (count == 2) {
 							s.setApprovalStatus("Approved");
-							Author a = s.getAuthor();
-							a.setPoints(a.getPoints() + s.getType().getPoints());
-							new AuthorRepo().update(a);	
+							AuthorServices.getInstance().addPoints(s.getAuthor(), s.getType().getPoints());
+							StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
 						}
-						new StoryRepo().update(s);
+						StoryServices.getInstance().updateStory(s);
 						break;
 					}
 					case "Article": {
 						s.setApprovalStatus("Approved");
 						s.setDraftApprovalCount(1);
-						Author a = s.getAuthor();
-						a.setPoints(a.getPoints() + s.getType().getPoints());
-						new AuthorRepo().update(a);
-						new StoryRepo().update(s);
+						AuthorServices.getInstance().addPoints(s.getAuthor(), s.getType().getPoints());
+						StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
+						StoryServices.getInstance().updateStory(s);
 						break;
 					}
 				}
 				break;
 			}
 			case "deny_draft": {
+				Story s = this.gson.fromJson(request.getReader(), Story.class);
+				StoryServices.getInstance().deleteStory(s);
+				StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
 				break;
 			}
 			case "request_draft_change": {
+				Story s = this.gson.fromJson(request.getReader(), Story.class);
+				StoryServices.getInstance().updateStory(s);
 				break;
 			}
 			default: break;

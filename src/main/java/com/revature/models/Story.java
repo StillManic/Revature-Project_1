@@ -30,7 +30,7 @@ public class Story {
 	private String requestorName;
 	private String draft;
 	private Boolean modified;
-	private Integer draftApprovalCount;
+	private Integer draftApprovalCount = 0;
 	// These are null until the proposal is approved by that level
 	private Editor assistant;
 	private Editor editor;

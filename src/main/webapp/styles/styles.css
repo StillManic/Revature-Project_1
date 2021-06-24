@@ -47,7 +47,7 @@ a:hover {
     color: #710A03;
 }
 
-#sp_title {
+#sp_title, #points_available_notice {
     text-align: center;
 }
 
