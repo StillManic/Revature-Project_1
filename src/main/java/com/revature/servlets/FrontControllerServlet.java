@@ -112,15 +112,6 @@ public class FrontControllerServlet extends HttpServlet {
 				}
 				break;
 			}
-//			case "get_logged_in_flag": {
-//				Object logged_in = session.getAttribute("logged_in");
-//				if (logged_in instanceof Author) {
-//					response.getWriter().append(this.gson.toJson("author"));
-//				} else if (logged_in instanceof Editor) {
-//					response.getWriter().append(this.gson.toJson("editor"));
-//				}
-//				break;
-//			}
 			case "logout": {
 				String pageURL = "";
 				Object loggedIn = session.getAttribute("logged_in");
@@ -279,9 +270,17 @@ public class FrontControllerServlet extends HttpServlet {
 				if (logged_in instanceof Author) {
 					json = "author|" + this.gson.toJson(stories);
 				} else if (logged_in instanceof Editor) {
-					//TODO: change this!!!
 					json = "editor|" + this.gson.toJson(stories);
 				}
+				response.getWriter().append(json);
+				break;
+			}
+			case "get_draft_requests": {
+				Editor e = (Editor) session.getAttribute("logged_in");
+				
+//				List<Story> stories = new StoryRepo().getAllWithDrafts();
+				List<Story> stories = new StoryRepo().getAllWithDraftsForEditor(e);
+				json = this.gson.toJson(stories);
 				response.getWriter().append(json);
 				break;
 			}
@@ -319,11 +318,12 @@ public class FrontControllerServlet extends HttpServlet {
 				}
 				
 				List<Story> infoReqs = new StoryRepo().getAllByReceiverName(e.getFirstName(), e.getLastName());
+				List<Story> draftReqs = new StoryRepo().getAllWithDraftsForEditor(e);
 				
 				counts[0] = e.getFirstName() + " " + e.getLastName();
 				counts[1] = "" + stories.size();
 				counts[2] = "" + infoReqs.size();
-				counts[3] = "" + 0;		// # drafts
+				counts[3] = "" + draftReqs.size();
 				
 				response.getWriter().append(this.gson.toJson(counts));
 				
@@ -352,6 +352,59 @@ public class FrontControllerServlet extends HttpServlet {
 			case "submit_draft": {
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
 				new StoryRepo().update(s);
+				break;
+			}
+			case "approve_draft": {
+				Story s = this.gson.fromJson(request.getReader(), Story.class);
+				String type = s.getType().getName();
+				System.out.println("Approving draft for type " + type);
+				switch (type) {
+					case "Novel":
+					case "Novella": {
+						Set<Editor> editors = Utils.getEditors(s.getGenre());
+						Integer count = s.getDraftApprovalCount();
+						count++;
+						s.setDraftApprovalCount(count);
+						float avg = (float) count / (float) editors.size();
+						if (avg > 0.5f) {
+							s.setApprovalStatus("Approved");
+							Author a = s.getAuthor();
+							a.setPoints(a.getPoints() + s.getType().getPoints());
+							new AuthorRepo().update(a);
+						}
+						new StoryRepo().update(s);
+						break;
+					}
+					case "Short Story": {
+						System.out.println("Short Story");
+						Integer count = s.getDraftApprovalCount();
+						count++;
+						s.setDraftApprovalCount(count);
+						if (count == 2) {
+							s.setApprovalStatus("Approved");
+							Author a = s.getAuthor();
+							a.setPoints(a.getPoints() + s.getType().getPoints());
+							new AuthorRepo().update(a);	
+						}
+						new StoryRepo().update(s);
+						break;
+					}
+					case "Article": {
+						s.setApprovalStatus("Approved");
+						s.setDraftApprovalCount(1);
+						Author a = s.getAuthor();
+						a.setPoints(a.getPoints() + s.getType().getPoints());
+						new AuthorRepo().update(a);
+						new StoryRepo().update(s);
+						break;
+					}
+				}
+				break;
+			}
+			case "deny_draft": {
+				break;
+			}
+			case "request_draft_change": {
 				break;
 			}
 			default: break;

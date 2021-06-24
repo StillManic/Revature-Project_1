@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.revature.models.Author;
 import com.revature.models.Editor;
@@ -15,13 +16,14 @@ import com.revature.models.Genre;
 import com.revature.models.Story;
 import com.revature.models.StoryType;
 import com.revature.utils.JDBCConnection;
+import com.revature.utils.Utils;
 
 public class StoryRepo implements GenericRepo<Story> {
 	private Connection conn = JDBCConnection.getConnection();
 	
 	@Override
 	public Story add(Story s) {
-		String sql = "insert into stories values (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning *";
+		String sql = "insert into stories values (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning *";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, s.getTitle());
@@ -46,6 +48,7 @@ public class StoryRepo implements GenericRepo<Story> {
 			ps.setString(17, s.getRequestorName());
 			ps.setString(18, s.getDraft());
 			ps.setBoolean(19, s.getModified());
+			ps.setInt(20, s.getDraftApprovalCount());
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				s.setId(rs.getInt("id"));
@@ -171,6 +174,90 @@ public class StoryRepo implements GenericRepo<Story> {
 		
 		return null;
 	}
+	
+	public List<Story> getAllWithDrafts() {
+		String sql = "select * from stories where draft notnull;";
+		try {
+			List<Story> list = new ArrayList<Story>();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				list.add(this.make(rs));
+			}
+			
+			return list;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public List<Story> getAllWithDraftsForEditor(Editor e) {
+		Set<Genre> genres = Utils.getGenres(e);
+		List<Story> list = new ArrayList<Story>();
+		String sql;
+		
+		if (e.getSenior()) {
+			sql = "select * from stories where genre = ? and draft notnull;";
+		} else if (e.getAssistant()) {
+			sql = "select * from stories where genre = ? and story_type in (1, 2) and draft notnull;";
+		} else {
+			sql = "select * from stories where genre = ? and story_type in (1, 2, 3) and draft notnull";
+		}
+		
+		for (Genre g : genres) {
+			try {
+				PreparedStatement ps = conn.prepareStatement(sql);
+				ps.setInt(1, g.getId());
+				ResultSet rs = ps.executeQuery();
+				while (rs.next()) {
+					list.add(this.make(rs));
+				}
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+		
+		if (!e.getSenior() && !e.getAssistant()) {
+			sql = "select * from stories where editor = ? and draft notnull;";
+			try {
+				PreparedStatement ps = conn.prepareStatement(sql);
+				ps.setInt(1, e.getId());
+				ResultSet rs = ps.executeQuery();
+				while (rs.next()) {
+					list.add(this.make(rs));
+				}
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			
+		}
+		
+		return list;
+	}
+		
+//		String sql = "select * from stories where";
+//		if (e.getSenior()) {
+//			sql += " senior = ?;";
+//		} else if (e.getAssistant() && t.getName().equals(t)) {
+//			sql += " assistant = ?;";
+//		} else {
+//			sql += " editor = ?;";
+//		}
+//		try {
+//			List<Story> list = new ArrayList<Story>();
+//			PreparedStatement ps = conn.prepareStatement(sql);
+//			ps.setInt(1, e.getId());
+//			ResultSet rs = ps.executeQuery();
+//			while (rs.next()) {
+//				list.add(this.make(rs));
+//			}
+//			
+//			return list;
+//		} catch (SQLException e1) {
+//			e1.printStackTrace();
+//		}
 
 	@Override
 	public Map<Integer, Story> getAll() {
@@ -194,7 +281,7 @@ public class StoryRepo implements GenericRepo<Story> {
 
 	@Override
 	public boolean update(Story s) {
-		String sql = "update stories set title = ?, description = ?, tag_line = ?, completion_date = ?, approval_status = ?, reason = ?, assistant = ?, editor = ?, senior = ?, request = ?, response = ?, receiver_name = ?, requestor_name = ?, draft = ?, modified = ? where id = ? returning *;";
+		String sql = "update stories set title = ?, description = ?, tag_line = ?, completion_date = ?, approval_status = ?, reason = ?, assistant = ?, editor = ?, senior = ?, request = ?, response = ?, receiver_name = ?, requestor_name = ?, draft = ?, modified = ?, draft_approval_count = ? where id = ? returning *;";
 		try {
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setString(1, s.getTitle());
@@ -215,7 +302,8 @@ public class StoryRepo implements GenericRepo<Story> {
 			ps.setString(13, s.getRequestorName());
 			ps.setString(14, s.getDraft());
 			ps.setBoolean(15, s.getModified());
-			ps.setInt(16, s.getId());
+			ps.setInt(16, s.getDraftApprovalCount());
+			ps.setInt(17, s.getId());
 			return ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -267,6 +355,7 @@ public class StoryRepo implements GenericRepo<Story> {
 		s.setRequestorName(rs.getString("requestor_name"));
 		s.setDraft(rs.getString("draft"));
 		s.setModified(rs.getBoolean("modified"));
+		s.setDraftApprovalCount(rs.getInt("draft_approval_count"));
 		return s;
 	}
 

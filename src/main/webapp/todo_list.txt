@@ -1,10 +1,14 @@
 -create way for draft to be approved by the appropriate people
 
 -notify author of changes made to a proposal by a senior editor
+-notify author of changes made to a draft by any of the editors
+
 -create way for "waiting" approvals to be moved to "submitted"
 
 -add a notice to the login screens if the entered login information isn't found in the database
 -add confirmation notices everywhere for submitting things
+
+-in modals, make the "submit" buttons either close the modal or have some sort of confirmation message
 
 -fix dropdown on request info modal
 
@@ -14,4 +18,4 @@
     -locked proposals show as grey
     -instead of accepted proposals dissapearing, they become green (and move to the bottom of the list?)
 
-
+-remove "Sign Up" button from login_editors.html

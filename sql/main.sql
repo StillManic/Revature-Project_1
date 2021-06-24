@@ -64,8 +64,12 @@ create table stories (
 	receiver_name varchar(41),
 	requestor_name varchar(41),
 	draft varchar,
-	modified bool
+	modified bool,
+	draft_approval_count int
 );
+
+insert into stories values
+(default, 'a', 1, 1, 1, 'b', 'c', '2021-05-03', 'd', 'e', '2021-05-03', null, null, null, null, null, null, null, null, false, 0);
 
 create table genre_editor_join (
 	id serial primary key,
@@ -88,6 +92,7 @@ alter table stories add column receiver_name varchar(41);
 alter table stories add column requestor_name varchar(41);
 alter table stories add column draft varchar;
 alter table stories add column modified bool;
+alter table stories add column draft_approval_count int;
 
 alter table editors add column senior bool;
 alter table editors add column assistant bool;
@@ -98,6 +103,10 @@ update stories set assistant = null, editor = null;
 update stories set requestor_name = 'Hisham Haqq' where id = 3;
 
 update stories set modified = true where id = 3;
+
+update stories set draft_approval_count = 0, approval_status = 'approved_senior';
+
+select * from stories where draft notnull;
 
 delete from stories where id = 5;
 
@@ -159,7 +168,15 @@ full join editors e
 on gej.editor = e.id
 where gej.id = 5;
 
+update stories set draft_approval_count = 0 where id = 1;
 
+select * from stories where genre = 1 and story_type in (1, 2) and draft notnull;
+select * from stories where genre = 2 and story_type in (1, 2) and draft notnull;
+select * from stories where genre = 3 and story_type in (1, 2) and draft notnull;
+
+select * from stories where genre = 2 and story_type = 2 or story_type = 3;
+
+select * from stories where assistant = 3 or editor = 3 or senior = 3;
 
 select * from stories where genre = 2;
 

@@ -75,6 +75,7 @@ input[type="text"]:focus, input[type="password"]:focus, input[type="date"]:focus
 /* Buttons */
 input[type="submit"], input[type="button"] {
     /* color: #d0d0d0; */
+    color: #360a5f;
     font-weight: bold;
     background-color: #69bb01;
     border: 0;

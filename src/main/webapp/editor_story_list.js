@@ -227,6 +227,17 @@ function populateStaticForm() {
         let sf_completion_date = document.getElementById("sf_completion_date");
         let sf_status = document.getElementById("sf_status");
 
+        console.log(story.draft);
+        if (story.approvalStatus == "approved_senior") {
+            let sf_draft_label = document.getElementById("sf_draft_label");
+            let sf_draft = document.getElementById("sf_draft");
+
+            sf_draft_label.style.display = "block";
+            sf_draft.style.display = "block";
+
+            sf_draft.innerHTML = story.draft;
+        }
+
         if (isSenior) {
             var sf_title_editable = document.createElement("input");
             sf_title_editable.setAttribute("type", "text");

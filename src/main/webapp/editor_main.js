@@ -35,7 +35,7 @@ function viewInfoRequests() {
 }
 
 function viewDrafts() {
-
+    window.location.href = "draft_list.html";
 }
 
 function logout() {

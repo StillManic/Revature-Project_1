@@ -30,6 +30,7 @@ public class Story {
 	private String requestorName;
 	private String draft;
 	private Boolean modified;
+	private Integer draftApprovalCount;
 	// These are null until the proposal is approved by that level
 	private Editor assistant;
 	private Editor editor;
@@ -169,6 +170,14 @@ public class Story {
 		return modified;
 	}
 
+	public Integer getDraftApprovalCount() {
+		return draftApprovalCount;
+	}
+
+	public void setDraftApprovalCount(Integer draftApprovalCount) {
+		this.draftApprovalCount = draftApprovalCount;
+	}
+
 	public void setModified(Boolean modified) {
 		this.modified = modified;
 	}
@@ -207,6 +216,7 @@ public class Story {
 		result = prime * result + ((completionDate == null) ? 0 : completionDate.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
 		result = prime * result + ((draft == null) ? 0 : draft.hashCode());
+		result = prime * result + ((draftApprovalCount == null) ? 0 : draftApprovalCount.hashCode());
 		result = prime * result + ((editor == null) ? 0 : editor.hashCode());
 		result = prime * result + ((genre == null) ? 0 : genre.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
@@ -262,6 +272,11 @@ public class Story {
 			if (other.draft != null)
 				return false;
 		} else if (!draft.equals(other.draft))
+			return false;
+		if (draftApprovalCount == null) {
+			if (other.draftApprovalCount != null)
+				return false;
+		} else if (!draftApprovalCount.equals(other.draftApprovalCount))
 			return false;
 		if (editor == null) {
 			if (other.editor != null)
@@ -336,21 +351,59 @@ public class Story {
 		return true;
 	}
 
+	
+	
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("Story [id=").append(id).append(", title=").append(title).append(", genre=").append(genre)
-				.append(", type=").append(type).append(", author=").append(author).append(", description=")
-				.append(description).append(", tagLine=").append(tagLine).append(", completionDate=")
-				.append(completionDate).append(", submissionDate=").append(submissionDate).append(", approvalStatus=")
-				.append(approvalStatus).append(", reason=").append(reason).append(", request=").append(request)
-				.append(", response=").append(response).append(", receiverName=").append(receiverName)
-				.append(", requestorName=").append(requestorName).append(", draft=").append(draft).append(", modified=")
-				.append(modified).append(", assistant=").append(assistant).append(", editor=").append(editor)
-				.append(", senior=").append(senior).append("]");
+		builder.append("Story [id=");
+		builder.append(id);
+		builder.append(", title=");
+		builder.append(title);
+		builder.append(", genre=");
+		builder.append(genre);
+		builder.append(", type=");
+		builder.append(type);
+		builder.append(", author=");
+		builder.append(author);
+		builder.append(", description=");
+		builder.append(description);
+		builder.append(", tagLine=");
+		builder.append(tagLine);
+		builder.append(", completionDate=");
+		builder.append(completionDate);
+		builder.append(", submissionDate=");
+		builder.append(submissionDate);
+		builder.append(", approvalStatus=");
+		builder.append(approvalStatus);
+		builder.append(", reason=");
+		builder.append(reason);
+		builder.append(", request=");
+		builder.append(request);
+		builder.append(", response=");
+		builder.append(response);
+		builder.append(", receiverName=");
+		builder.append(receiverName);
+		builder.append(", requestorName=");
+		builder.append(requestorName);
+		builder.append(", draft=");
+		builder.append(draft);
+		builder.append(", modified=");
+		builder.append(modified);
+		builder.append(", draftApprovalCount=");
+		builder.append(draftApprovalCount);
+		builder.append(", assistant=");
+		builder.append(assistant);
+		builder.append(", editor=");
+		builder.append(editor);
+		builder.append(", senior=");
+		builder.append(senior);
+		builder.append("]");
 		return builder.toString();
 	}
-	
+
+
+
 	public static class Deserializer implements JsonDeserializer<Story> {
 		@Override
 		public Story deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -397,6 +450,7 @@ public class Story {
 			story.setRequestorName(context.deserialize(jo.get("requestorName"),	String.class));
 			story.setDraft(context.deserialize(jo.get("draft"), String.class));
 			story.setModified(context.deserialize(jo.get("modified"), Boolean.class));
+			story.setDraftApprovalCount(context.deserialize(jo.get("draftApprovalCount"), Integer.class));
 			story.setAssistant(context.deserialize(jo.get("assistant"), Editor.class));
 			story.setEditor(context.deserialize(jo.get("editor"), Editor.class));
 			story.setSenior(context.deserialize(jo.get("senior"), Editor.class));
