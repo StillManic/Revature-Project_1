@@ -1,6 +1,6 @@
-let url = "http://localhost:8080/Project_1/controller"
+let url = "http://localhost:8080/Project_1/controller";
 
-function submitSignUp() {
+async function submitSignUp() {
     let flag = "/sign_up_author";
 
     let obj = {
@@ -13,22 +13,18 @@ function submitSignUp() {
         password: document.getElementById("password").value
     }
 
-    // TODO: do the comparison between this and obj.password!!!
     let confirm_password = document.getElementById("confirm");
+    let mismatch_text = document.getElementById("mismatch_text");
+    if (confirm_password.value != obj.password) {
+        mismatch_text.style.display = "block";
+    } else {
+        mismatch_text.style.display = "none";
 
-    let json = JSON.stringify(obj);
-    console.log(json);
-
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                window.location.href = xhttp.responseText;
-                console.log("RECEIVED RESPONSE FROM SIGN UP");
-            }
-        }
+        fetch(url + flag, {
+            method: "POST",
+            body: JSON.stringify(obj)
+        })
+        .then(response => response.text())
+        .then(data => window.location.href = data);
     }
 }

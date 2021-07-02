@@ -2,6 +2,9 @@ package com.revature.services;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.revature.models.Author;
 import com.revature.models.Editor;
 import com.revature.models.Story;
@@ -10,6 +13,7 @@ import com.revature.repositories.StoryRepo;
 public class StoryServices {
 	private static StoryServices instance;
 	private StoryRepo repo = new StoryRepo();
+	private static Logger logger = LogManager.getLogger(StoryServices.class);
 	
 	private StoryServices() {}
 	
@@ -25,6 +29,7 @@ public class StoryServices {
 	public void submitNextWaitingProposal(Author a) {
 		List<Story> waiting = this.getAllWaitingForAuthor(a);
 		Story next = waiting.stream().filter((s) -> { return s.getType().getPoints() <= a.getPoints(); }).findAny().orElse(null);
+		logger.info("Submitting waiting proposal " + next + " for " + a);
 		if (next != null) {
 			this.incrementApprovalStatus(next, null);
 			AuthorServices.getInstance().subtractPoints(a, next.getType().getPoints());
@@ -33,6 +38,7 @@ public class StoryServices {
 	}
 	
 	public Story addStory(Story s) {
+		logger.info("Adding " + s);
 		return this.repo.add(s);
 	}
 	
@@ -59,6 +65,7 @@ public class StoryServices {
 	}
 	
 	public void updateStory(Story s) {
+		logger.info("Updating " + s);
 		this.repo.update(s);
 	}
 	
@@ -85,11 +92,13 @@ public class StoryServices {
 				break;
 			default: break;
 		}
+		logger.info("Incremented approval status for " + s);
 		this.updateStory(s);
 	}
 	
 	public boolean deleteStory(Story s) {
 		AuthorServices.getInstance().addPoints(s.getAuthor(), s.getType().getPoints());
+		logger.info("Deleting " + s);
 		return this.repo.delete(s);
 	}
 }

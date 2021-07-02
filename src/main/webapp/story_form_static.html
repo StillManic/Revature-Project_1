@@ -65,11 +65,11 @@
 
         <div id="main_div" class="container">
             <input type="button" name="update" value="Update" id="update_button" style="display: none">
-            <input type="button" name="approve" value="Approve" id="approve_button">
+            <input type="button" name="approve" value="Approve" id="approve_button" style="display: none">
             <input type="button" name="deny" value="Deny" id="deny_button">
             <input type="button" name="res_info" value="View Response" id="response_button" style="display: none">
-            <input type="button" name="req_info" value="Request More Information" id="info_button">
-            <input type="button" name="submit_draft" value="Submit Draft" id="draft_button" style="display:none">
+            <input type="button" name="req_info" value="Request More Information" id="info_button" style="display: none">
+            <input type="button" name="submit_draft" value="Submit Draft" id="draft_button" style="display: none">
             <input type="button" name="back" value="Back" onclick="sfBack()">
 
             <br><br>
@@ -81,7 +81,7 @@
             <h5 id="sf_status">-</h5>
 
             <label for="sf_reason" id="label_for_sf_reason" class="h4" style="display: none">Reason</label>
-            <h5 id="sf_reason" style="display: none">-</h5>
+            <h5 id="sf_reason" class="purple light-grey-background" style="display: none">-</h5>
 
             <br>
 
@@ -116,7 +116,7 @@
             <h5 id="sf_draft_change_request" class="purple light-grey-background" style="display:none">-</h5>
 
             <label for="sf_draft" class="h4" id="sf_draft_label" style="display:none">Draft</label>
-            <h5 id="sf_draft" class="purple light-grey-background" style="display:none">-</h5>
+            <h5 id="sf_draft" class="purple light-grey-background" style="display:none"></h5>
 
             <input type="button" name="update_draft_button" id="update_draft_button" value="Update Draft" style="display:none">
         </div>

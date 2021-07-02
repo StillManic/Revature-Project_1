@@ -136,49 +136,38 @@ function closeModal() {
     fillTable();
 }
 
-function approve(story) {
+async function approve(story) {
     let flag = "/approve_draft";
-
-    let json = JSON.stringify(story);
-
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
 
     closeModal();
 
-    let approveBtn = document.getElementById("approve_button");
-    // let denyBtn = document.getElementById("deny_button");
-    let changeBtn = document.getElementById("change_button");
+    //TODO: these were intended to prevent approving the same draft twice, but they break the modal for the other pending drafts
+    // let approveBtn = document.getElementById("approve_button");
+    // let changeBtn = document.getElementById("change_button");
     
     approveBtn.style.display = "none";
-    // denyBtn.style.display = "none";
     changeBtn.style.display = "none";
 
-    xhttp.onreadystatechange = () => {}
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
 }
 
-function deny(story) {
+async function deny(story) {
     let flag = "/deny_draft";
 
-    let json = JSON.stringify(story);
-
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {}
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
 }
 
-function change(story) {
+async function change(story) {
     let flag = "/request_draft_change";
 
-    let json = JSON.stringify(story);
-    console.log("Changing Story!!! " + json);
-
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {}
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
 }

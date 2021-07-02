@@ -15,6 +15,7 @@ import com.revature.models.Editor;
 import com.revature.models.Genre;
 import com.revature.models.Story;
 import com.revature.models.StoryType;
+import com.revature.services.EditorServices;
 import com.revature.services.GEJoinServices;
 import com.revature.utils.JDBCConnection;
 

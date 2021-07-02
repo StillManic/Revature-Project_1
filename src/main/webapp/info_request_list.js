@@ -69,21 +69,14 @@ function fillRequests() {
     }
 }
 
-function handleRowClick(story) {
+async function handleRowClick(story) {
     let flag = "/save_story_to_session";
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(JSON.stringify(story));
 
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                if (xhttp.responseText == "saved") {
-                    window.location.href = "info_request.html";
-                }
-            }
-        }
-    }
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
+    .then(response => window.location.href = "info_request.html");
 }
 
 function populateInfoRequest() {
@@ -122,20 +115,14 @@ function populateInfoRequest() {
     }
 }
 
-function sendResponse(story) {
+async function sendResponse(story) {
     let flag = "/save_response";
-    let json = JSON.stringify(story);
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
 
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                
-            }
-        }
-    }
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
+    .then(response => sfBack());
 }
 
 function listBack() {

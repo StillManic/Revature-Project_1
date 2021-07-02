@@ -11,6 +11,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -21,9 +24,6 @@ import com.revature.models.Editor;
 import com.revature.models.Genre;
 import com.revature.models.Story;
 import com.revature.models.StoryType;
-import com.revature.repositories.GenreRepo;
-import com.revature.repositories.StoryRepo;
-import com.revature.repositories.StoryTypeRepo;
 import com.revature.services.AuthorServices;
 import com.revature.services.EditorServices;
 import com.revature.services.GEJoinServices;
@@ -43,6 +43,7 @@ public class FrontControllerServlet extends HttpServlet {
 	
 	private Gson gson = new Gson();
 	public static HttpSession session;
+	public static Logger logger = LogManager.getLogger(FrontControllerServlet.class);
 	
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
@@ -68,6 +69,7 @@ public class FrontControllerServlet extends HttpServlet {
 				if (a != null) {
 					a = AuthorServices.getInstance().addAuthor(a);
 					System.out.println("Created new Author " + a + " and logged in!");
+					logger.info("Created new Author " + a + " and logged in!");
 					session.setAttribute("logged_in", a);
 					response.getWriter().append("author_main.html");
 				} else {
@@ -82,10 +84,12 @@ public class FrontControllerServlet extends HttpServlet {
 				Author a = AuthorServices.getInstance().getByUsernameAndPassword(info.username, info.password);
 				if (a != null) {
 					System.out.println("Author " + a.getFirstName() + " has logged in!");
+					logger.info("Author " + a + " has logged in!");
 					session.setAttribute("logged_in", a);
 					response.getWriter().append("author_main.html");
 				} else {
 					System.out.println("Failed to login with credentials: username=" + info.username + " password=" + info.password);
+					logger.error("Failed to login as an Author with credentials: username=" + info.username + " password=" + info.password);
 				}
 				break;
 			}
@@ -95,10 +99,12 @@ public class FrontControllerServlet extends HttpServlet {
 				Editor e = EditorServices.getInstance().getByUsernameAndPassword(info.username, info.password);
 				if (e != null) {
 					System.out.println("Editor " + e.getFirstName() + " has logged in!");
+					logger.info("Editor " + e + " has logged in!");
 					session.setAttribute("logged_in", e);
 					response.getWriter().append("editor_main.html");
 				} else {
 					System.out.println("Failed to login with credentials: username=" + info.username + " password=" + info.password);
+					logger.error("Failed to login as an Editor with credentials: username=" + info.username + " password=" + info.password);
 				}
 				break;
 			}
@@ -108,6 +114,7 @@ public class FrontControllerServlet extends HttpServlet {
 				if (loggedIn instanceof Author) pageURL = "index.html";
 				if (loggedIn instanceof Editor) pageURL = "login_editors.html";
 				System.out.println("Logging out!");
+				logger.info("User " + loggedIn + " has logged out.");
 				response.getWriter().append(pageURL);
 				session.invalidate();
 				break;
@@ -135,6 +142,7 @@ public class FrontControllerServlet extends HttpServlet {
 				story.setDraftApprovalCount(0);
 				story = StoryServices.getInstance().addStory(story);
 				System.out.println(story);
+				logger.info(a + " added new proposal for " + story);
 				break;
 			}
 			case "get_proposals": {
@@ -155,9 +163,8 @@ public class FrontControllerServlet extends HttpServlet {
 						} else if (e.getAssistant()) {
 							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(g.getId(), "submitted"));
 						} else {
-							String status = "approved_assistant";
 							Genre other = GenreServices.getInstance().getGenreForGeneralEditor(g);
-							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(other.getId(), status));
+							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(other.getId(), "approved_assistant"));
 						}
 					}
 					
@@ -197,12 +204,25 @@ public class FrontControllerServlet extends HttpServlet {
 			case "deny_story": {
 				Object logged_in = session.getAttribute("logged_in");
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
-				if (logged_in instanceof Author && s.getModified()) {
-					StoryServices.getInstance().deleteStory(s);
+				
+				if (logged_in instanceof Author) {
 					Author a = (Author) logged_in;
+					logger.info(a + " cancelled proposal for " + s);
+//					StoryServices.getInstance().deleteStory(s);
+					s.setApprovalStatus("cancelled");
+					StoryServices.getInstance().updateStory(s);
 					AuthorServices.getInstance().addPoints(a, s.getType().getPoints());
 					StoryServices.getInstance().submitNextWaitingProposal(a);
-				} else StoryServices.getInstance().updateStory(s);
+				} else {
+					Editor e = (Editor) logged_in;
+					s.setApprovalStatus("denied");
+					logger.info(e + " denied proposal for " + s);
+					StoryServices.getInstance().updateStory(s);
+					AuthorServices.getInstance().addPoints(s.getAuthor(), s.getType().getPoints());
+					StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
+				}
+				
+				response.getWriter().append(this.gson.toJson(s));
 				break;
 			}
 			case "request_info": {
@@ -211,7 +231,8 @@ public class FrontControllerServlet extends HttpServlet {
 				String receiverName = this.gson.fromJson(strs[1], String.class);
 				s.setReceiverName(receiverName);
 				StoryServices.getInstance().updateStory(s);
-				System.out.println("Requesting info!!! " + s);
+//				System.out.println("Requesting info!!! " + s);
+				logger.info(s.getRequestorName() + " requested more information from " + s.getReceiverName() + " for proposal " + s);
 				break;
 			}
 			case "get_requests": {
@@ -263,17 +284,8 @@ public class FrontControllerServlet extends HttpServlet {
 					} else if (e.getAssistant()) {
 						stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(g.getId(), "submitted"));
 					} else {
-						String status = "approved_assistant";
-						if (g.getName().equals("Sci-fi")) {
-							Genre fantasy = GenreServices.getInstance().getByName("Fantasy");
-							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(fantasy.getId(), status));
-						} else if (g.getName().equals("Fantasy")) {
-							Genre horror = GenreServices.getInstance().getByName("Horror");
-							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(horror.getId(), status));
-						} else if (g.getName().equals("Horror")) {
-							Genre scifi = GenreServices.getInstance().getByName("Sci-fi");
-							stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(scifi.getId(), status));
-						}
+						Genre genre = GenreServices.getInstance().getGenreForGeneralEditor(g);
+						stories.addAll(StoryServices.getInstance().getAllByGenreAndStatus(genre.getId(), "approved_assistant"));
 					}
 				}
 				
@@ -306,7 +318,6 @@ public class FrontControllerServlet extends HttpServlet {
 			case "update_details": {
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
 				StoryServices.getInstance().updateStory(s);
-				// notify author somehow
 				break;
 			}
 			case "submit_draft": {
@@ -336,6 +347,7 @@ public class FrontControllerServlet extends HttpServlet {
 						float avg = (float) count / (float) editors.size();
 						if (avg > 0.5f) {
 							s.setApprovalStatus("Approved");
+							logger.info("Proposal approved for " + s);
 							AuthorServices.getInstance().addPoints(s.getAuthor(), s.getType().getPoints());
 							StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
 						}
@@ -343,12 +355,12 @@ public class FrontControllerServlet extends HttpServlet {
 						break;
 					}
 					case "Short Story": {
-						System.out.println("Short Story");
 						Integer count = s.getDraftApprovalCount();
 						count++;
 						s.setDraftApprovalCount(count);
 						if (count == 2) {
 							s.setApprovalStatus("Approved");
+							logger.info("Proposal approved for " + s);
 							AuthorServices.getInstance().addPoints(s.getAuthor(), s.getType().getPoints());
 							StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
 						}
@@ -358,6 +370,7 @@ public class FrontControllerServlet extends HttpServlet {
 					case "Article": {
 						s.setApprovalStatus("Approved");
 						s.setDraftApprovalCount(1);
+						logger.info("Proposal approved for " + s);
 						AuthorServices.getInstance().addPoints(s.getAuthor(), s.getType().getPoints());
 						StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
 						StoryServices.getInstance().updateStory(s);
@@ -368,13 +381,17 @@ public class FrontControllerServlet extends HttpServlet {
 			}
 			case "deny_draft": {
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
-				StoryServices.getInstance().deleteStory(s);
+//				StoryServices.getInstance().deleteStory(s);
+				s.setApprovalStatus("denied");
+				StoryServices.getInstance().updateStory(s);
 				StoryServices.getInstance().submitNextWaitingProposal(s.getAuthor());
+				logger.info("Draft denied for proposal " + s);
 				break;
 			}
 			case "request_draft_change": {
 				Story s = this.gson.fromJson(request.getReader(), Story.class);
 				StoryServices.getInstance().updateStory(s);
+				logger.info("Draft changes requested for proposal " + s);
 				break;
 			}
 			default: break;

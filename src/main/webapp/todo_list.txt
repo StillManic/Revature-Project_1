@@ -1,3 +1,5 @@
+-implement logging and some JUnit testing
+
 -fix bug where draft list shows up on editor page before proposals are at appropriate approval level
 
 -notify author of changes made to a proposal by a senior editor

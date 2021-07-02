@@ -130,31 +130,25 @@ function fillProposals() {
 function getPrettyStatus(status) {
     if (status == "waiting") { return "Waiting for Points"; }
     if (status == "submitted") { return "Submitted"; }
-    if (status == "approved_assistant") { return "Approved by Assistant"; }
-    if (status == "approved_editor") { return "Approved by General"; }
+    if (status == "approved_assistant") { return "Approved by Assistant Editor"; }
+    if (status == "approved_editor") { return "Approved by General Editor"; }
     if (status == "approved_senior") { return "Waiting for Draft"; }
     if (status == "Approved") { return "Approved"; }
+    if (status == "denied") { return "Denied"; }
+    if (status == "cancelled") { return "Cancelled"; }
 }
 
 /*
         Handle row clicks on editor_story_list.html
 */
-function handleRowClick(story) {
+async function handleRowClick(story) {
     let flag = "/save_story_to_session";
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(JSON.stringify(story));
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                if (xhttp.responseText == "saved") {
-                    console.log("saved story, redirecting!");
-                    window.location.href = "story_form_static.html";
-                }
-            }
-        }
-    }
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
+    .then(response => response.text())
+    .then(data => window.location.href = "story_form_static.html");
 }
 
 /*
@@ -244,6 +238,8 @@ function populateStaticForm() {
         if (logged_in == "author") {
             infoBtn.style.display = "none";
 
+            denyBtn.value = "Cancel";
+
             if (story.approvalStatus == "approved_senior") {
                 draftBtn.style.display = "inline";
 
@@ -267,11 +263,16 @@ function populateStaticForm() {
                     submitDraft(story);
                 }
 
-                if (!story.modified) {
-                    approveBtn.style.display = "none";
-                    denyBtn.style.display = "none";
+                if (story.modified) {
+                    approveBtn.style.display = "inline";
+                    // denyBtn.style.display = "inline";
+                    denyBtn.value = "Deny Changes";
                 }
             }
+        } else {
+            approveBtn.style.display = "inline";
+            denyBtn.style.display = "inline";
+            infoBtn.style.display = "inline";
         }
 
         approveBtn.onclick = () => {
@@ -367,7 +368,7 @@ function populateStaticForm() {
         sf_genre.innerHTML = story.genre.name;
         sf_type.innerHTML = story.type.name + " (" + story.type.points + " points)";
         sf_description.innerHTML = story.description;
-        sf_status.innerHTML = story.approvalStatus;
+        sf_status.innerHTML = getPrettyStatus(story.approvalStatus);
 
 
 
@@ -400,7 +401,7 @@ function populateStaticForm() {
         /*
                 Approve proposal
         */
-        function approve(story) {
+        async function approve(story) {
             let flag = "/approve_story";
 
             if (logged_in == "author" && story.modified) {
@@ -411,20 +412,12 @@ function populateStaticForm() {
                 story.requestorName = null;
                 story.receiverName = null;
             }
-        
-            let json = JSON.stringify(story);
-        
-            let xhttp = new XMLHttpRequest();
-            xhttp.open("POST", url + flag, true);
-            xhttp.send(json);
-        
-            xhttp.onreadystatechange = () => {
-                if (xhttp.readyState == 4) {
-                    if (xhttp.status == 200) {
-                        sf_status.innerHTML = "Approved";
-                    }
-                }
-            }
+
+            fetch(url + flag, {
+                method: "POST",
+                body: JSON.stringify(story)
+            })
+            .then(response => sf_status.innerHTML = "Approved")
         }
 
         
@@ -496,61 +489,40 @@ function makeOption(person, selected, ps) {
 /*
         Deny proposal
 */
-function deny(story, reason) {
-    //
-    //  TODO: create pop-up or other method of providing a reason for denial.
-    //
+async function deny(story, reason) {
     let flag = "/deny_story";
-
-    story.approvalStatus = "denied";
+    story.approvalStatus = "denied";    // this is not strictly needed as the approval status is set in Java, but I'll leave it here anyway
     story.reason = reason;
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Denied story " + data);
+        story = data;
 
-    let json = JSON.stringify(story);
+        let reason_box_label = document.getElementById("label_for_sf_reason");
+        let reason_box = document.getElementById("sf_reason");
 
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
+        reason_box_label.style.display = "block";
+        reason_box.style.display = "block";
 
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                console.log("Denied story " + json);
-                story = JSON.parse(json);
-
-                let reason_box_label = document.getElementById("label_for_sf_reason");
-                let reason_box = document.getElementById("sf_reason");
-
-                reason_box_label.style.display = "block";
-                reason_box.style.display = "block";
-
-                reason_box.innerHTML = story.reason;
-            }
-        }
-    }
+        reason_box.innerHTML = story.reason;
+    });
 }
 
 /*
         Request Info about proposal
 */
-function requestInfo(story, person) {
+async function requestInfo(story, person) {
     let flag = "/request_info";
-
     let packet = [JSON.stringify(story), JSON.stringify(person)];
 
-    let json = JSON.stringify(packet);
-    console.log("sending request for information! - " + json);
-
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                console.log("Requesting more information for " + story);
-            }
-        }
-    }
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(packet)
+    })
 }
 
 /*
@@ -584,9 +556,8 @@ function isSeniorStatus(story) {
     return story.approvalStatus == "approved_editor";
 }
 
-function updateDetails(story) {
+async function updateDetails(story) {
     let flag = "/update_details";
-
     var sf_title_editable = document.getElementById("sf_title");
     var sf_tagline_editable = document.getElementById("sf_tagline");
     var sf_completion_date_editable = document.getElementById("sf_completion_date");
@@ -596,55 +567,27 @@ function updateDetails(story) {
     story.completionDate = sf_completion_date_editable.value;
     story.modified = true;
 
-    let json = JSON.stringify(story);
-
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                
-            }
-        }
-    }
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
 }
 
-function submitDraft(story) {
+async function submitDraft(story) {
     let flag = "/submit_draft";
-    let draft_box = document.getElementById("draft_box");
-    let xhttp = new XMLHttpRequest();
+    story.draft = document.getElementById("draft_box").value;
 
-    story.draft = draft_box.value;
-    let json = JSON.stringify(story);
-
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-
-            }
-        }
-    }
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
 }
 
-function updateDraft(story) {
+async function updateDraft(story) {
     let flag = "/update_draft";
     
-    let json = JSON.stringify(story);
-
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-
-            }
-        }
-    }
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story)
+    })
 }

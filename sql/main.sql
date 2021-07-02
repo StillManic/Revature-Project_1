@@ -46,7 +46,7 @@ create table authors (
 
 create table stories (
 	id serial primary key,
-	title varchar(50),
+	title varchar,
 	genre int references genres(id),
 	story_type int references story_types(id),
 	author int references authors(id),
@@ -93,6 +93,7 @@ alter table stories add column requestor_name varchar(41);
 alter table stories add column draft varchar;
 alter table stories add column modified bool;
 alter table stories add column draft_approval_count int;
+alter table stories alter column title type varchar;
 
 alter table editors add column senior bool;
 alter table editors add column assistant bool;
@@ -101,6 +102,9 @@ update stories set submission_date = '2021-06-18';
 update stories set submission_date = '2021-06-04' where id = 3;
 update stories set assistant = null, editor = null;
 update stories set requestor_name = 'Hisham Haqq' where id = 3;
+
+update stories set draft = null where id in (10, 6, 7);
+update stories set reason = null, senior = null, editor = null, assistant = null, draft = null;
 
 update stories set modified = true where id = 3;
 

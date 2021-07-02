@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.revature.models.Editor;
 import com.revature.models.GEJoin;
 import com.revature.models.Genre;
@@ -14,6 +17,7 @@ public class GEJoinServices {
 	private static Map<Editor, Set<Genre>> eToG = new HashMap<Editor, Set<Genre>>();
 	private static Map<Genre, Set<Editor>> gToE = new HashMap<Genre, Set<Editor>>();
 	private static GEJoinRepo repo = new GEJoinRepo();
+	private static Logger logger = LogManager.getLogger(GEJoinServices.class);
 	
 	public static Set<Genre> getGenres(Editor e) {
 		return eToG.get(e);
@@ -41,6 +45,7 @@ public class GEJoinServices {
 	}
 	
 	public static void loadEntries() {
+		logger.info("Loading GEJoin entries!");
 		Map<Integer, GEJoin> map = repo.getAll();
 		
 		for (GEJoin j : map.values()) {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
     <Properties>
-        <Property name="basePath">../Project_1/src/main/resources</Property>
+        <Property name="basePath">../Revature/Projects/Project 1/Project_1/src/main/resources</Property>
     </Properties>
     <Appenders>
         <!-- File Appender -->

@@ -3,9 +3,6 @@ let url = "http://localhost:8080/Project_1/controller"
 function fillDropdowns() {
     console.log("fillStoryTypeDropdown");
     let flag = "/get_story_types";
-    let sts = document.getElementById("story_type_select");
-    let gs = document.getElementById("genre_select");
-    let point_counter = document.getElementById("point_counter");
 
     let xhttp = new XMLHttpRequest();
     xhttp.open("GET", url + flag, true);
@@ -19,6 +16,10 @@ function fillDropdowns() {
                 let stj = JSON.parse(jsons[0]);
                 let gj = JSON.parse(jsons[1]);
                 let author = JSON.parse(jsons[2]);
+
+                let sts = document.getElementById("story_type_select");
+                let gs = document.getElementById("genre_select");
+                let point_counter = document.getElementById("point_counter");
 
                 for (let i in stj) {
                     let story_type = stj[i];
@@ -65,9 +66,9 @@ function fillDropdowns() {
     }
 }
 
-function submitForm() {
-    console.log("submitForm");
+async function submitForm() {
     let flag = "/submit_story_form";
+
     let story_form = {
         title: document.getElementById("story_title").value,
         genre: document.getElementById("genre_select").value,
@@ -85,17 +86,9 @@ function submitForm() {
     today = yyyy + "-" + mm + "-" + dd;
     story_form.submissionDate = today;
 
-    let json = JSON.stringify(story_form);
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("POST", url + flag, true);
-    xhttp.send(json);
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState == 4) {
-            if (xhttp.status == 200) {
-                console.log("Received response from form submission!");
-                window.location.href = "author_main.html";
-            }
-        }
-    }
+    fetch(url + flag, {
+        method: "POST",
+        body: JSON.stringify(story_form)
+    })
+    .then(response => window.location.href = "author_main.html");
 }
